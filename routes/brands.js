@@ -116,7 +116,19 @@ router.post("/:id/issues", (req, res) => {
       return res.status(404).json({ error: "Brand not found" });
     }
 
-    const { amount, recipientEmail, message, pin } = req.body;
+    const { 
+      amount, 
+      recipientEmail, 
+      message, 
+      pin,
+      senderName,
+      recipientName,
+      recipientPhone,
+      deliveryType,
+      deliveryTime,
+      deliveryDate,
+      period
+    } = req.body;
 
     // Validation
     if (!amount || amount <= 0) {
@@ -125,6 +137,38 @@ router.post("/:id/issues", (req, res) => {
 
     if (!recipientEmail) {
       return res.status(400).json({ error: "Recipient email is required" });
+    }
+
+    if (!recipientPhone) {
+      return res.status(400).json({ error: "Recipient phone is required" });
+    }
+
+    if (!deliveryType || !['personal', 'send_as_gift'].includes(deliveryType)) {
+      return res.status(400).json({ error: "Valid delivery type is required (personal or send_as_gift)" });
+    }
+
+    if (!deliveryTime || !['immediately', 'custom'].includes(deliveryTime)) {
+      return res.status(400).json({ error: "Valid delivery time is required (immediately or custom)" });
+    }
+
+    // senderName and recipientName are only required when deliveryType is 'send_as_gift'
+    if (deliveryType === 'send_as_gift') {
+      if (!senderName) {
+        return res.status(400).json({ error: "Sender name is required when delivery type is send_as_gift" });
+      }
+      if (!recipientName) {
+        return res.status(400).json({ error: "Recipient name is required when delivery type is send_as_gift" });
+      }
+    }
+
+    // deliveryDate and period are only required when deliveryTime is 'custom'
+    if (deliveryTime === 'custom') {
+      if (!deliveryDate) {
+        return res.status(400).json({ error: "Delivery date is required when delivery time is custom" });
+      }
+      if (!period || !['morning', 'afternoon', 'evening'].includes(period)) {
+        return res.status(400).json({ error: "Valid period is required when delivery time is custom (morning, afternoon, or evening)" });
+      }
     }
 
     // Generate unique activation code
@@ -139,27 +183,73 @@ router.post("/:id/issues", (req, res) => {
       amount: parseFloat(amount),
       activationCode: activationCode,
       recipientEmail: recipientEmail,
+      recipientPhone: recipientPhone,
       message: message || "",
-      pin: pin || null,
+      deliveryType: deliveryType,
+      deliveryTime: deliveryTime,
       status: "active",
       issuedAt: new Date().toISOString(),
       isUsed: false,
-      usedAt: null,
     };
 
+    // Only include optional fields if they have values
+    if (senderName) {
+      giftCard.senderName = senderName;
+    }
+    
+    if (recipientName) {
+      giftCard.recipientName = recipientName;
+    }
+    
+    if (pin) {
+      giftCard.pin = pin;
+    }
+    
+    if (deliveryTime === 'custom' && deliveryDate) {
+      giftCard.deliveryDate = deliveryDate;
+    }
+    
+    if (deliveryTime === 'custom' && period) {
+      giftCard.period = period;
+    }
+
     issuedCards.push(giftCard);
+
+    // Build response data, only including fields that have values
+    const responseData = {
+      id: giftCard.id,
+      brandName: giftCard.brandName,
+      amount: giftCard.amount,
+      activationCode: giftCard.activationCode,
+      recipientEmail: giftCard.recipientEmail,
+      recipientPhone: giftCard.recipientPhone,
+      message: giftCard.message,
+      deliveryType: giftCard.deliveryType,
+      deliveryTime: giftCard.deliveryTime,
+      issuedAt: giftCard.issuedAt,
+    };
+
+    // Only include optional fields if they exist in the giftCard object
+    if (giftCard.senderName) {
+      responseData.senderName = giftCard.senderName;
+    }
+    
+    if (giftCard.recipientName) {
+      responseData.recipientName = giftCard.recipientName;
+    }
+    
+    if (giftCard.deliveryDate) {
+      responseData.deliveryDate = giftCard.deliveryDate;
+    }
+    
+    if (giftCard.period) {
+      responseData.period = giftCard.period;
+    }
 
     res.status(201).json({
       status: "success",
       message: "Gift card issued successfully",
-      data: {
-        id: giftCard.id,
-        brandName: giftCard.brandName,
-        amount: giftCard.amount,
-        activationCode: giftCard.activationCode,
-        recipientEmail: giftCard.recipientEmail,
-        issuedAt: giftCard.issuedAt,
-      },
+      data: responseData,
     });
   } catch (error) {
     res.status(500).json({ error: "Failed to issue gift card" });
