@@ -1,82 +1,43 @@
 const express = require("express");
 const router = express.Router();
-const { v4: uuidv4 } = require("uuid");
-
-// In-memory data storage (replace with database in production)
-let brands = [
-  {
-    id: 1,
-    name: "Lazada",
-    description: "Online shopping platform",
-    logo: "lazada-logo.png",
-    isActive: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 2,
-    name: "Grab",
-    description: "Southeast Asian super app",
-    logo: "grab-logo.png",
-    isActive: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 3,
-    name: "Amazon",
-    description: "Global e-commerce and cloud computing",
-    logo: "amazon-logo.png",
-    isActive: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 4,
-    name: "Subway",
-    description: "Fast food restaurant chain",
-    logo: "subway-logo.png",
-    isActive: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 5,
-    name: "Esprit",
-    description: "Fashion and lifestyle brand",
-    logo: "esprit-logo.png",
-    isActive: true,
-    createdAt: new Date().toISOString(),
-  },
-];
-
-let issuedCards = [];
+const crypto = require("crypto");
+const { Brand, GiftCard } = require("../models");
+const { Op } = require("sequelize");
 
 // GET /api/brands - List all brands with pagination
-router.get("/", (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
 
-    const activeBrands = brands.filter((brand) => brand.isActive);
-    const paginatedBrands = activeBrands.slice(offset, offset + limit);
+    const { count, rows } = await Brand.findAndCountAll({
+      where: { isActive: true },
+      limit: limit,
+      offset: offset,
+      order: [['createdAt', 'ASC']],
+    });
 
     res.json({
       status: "success",
-      data: paginatedBrands,
+      data: rows,
       pagination: {
         page: page,
         limit: limit,
-        total: activeBrands.length,
-        totalPages: Math.ceil(activeBrands.length / limit),
-        hasNext: page < Math.ceil(activeBrands.length / limit),
+        total: count,
+        totalPages: Math.ceil(count / limit),
+        hasNext: page < Math.ceil(count / limit),
         hasPrev: page > 1,
       },
     });
   } catch (error) {
+    console.error('Error fetching brands:', error);
     res.status(500).json({ error: "Failed to fetch brands" });
   }
 });
 
 // GET /api/brands/:id - Show specific brand
-router.get("/:id", (req, res) => {
+router.get("/:id", async (req, res) => {
   try {
     const brandId = parseInt(req.params.id);
 
@@ -85,7 +46,12 @@ router.get("/:id", (req, res) => {
       return res.status(400).json({ error: "Invalid brand ID format" });
     }
 
-    const brand = brands.find((b) => b.id === brandId && b.isActive);
+    const brand = await Brand.findOne({
+      where: { 
+        id: brandId, 
+        isActive: true 
+      }
+    });
 
     if (!brand) {
       return res.status(404).json({ error: "Brand not found" });
@@ -96,12 +62,13 @@ router.get("/:id", (req, res) => {
       data: brand,
     });
   } catch (error) {
+    console.error('Error fetching brand:', error);
     res.status(500).json({ error: "Failed to fetch brand" });
   }
 });
 
 // POST /api/brands/:id/issues - Issue a gift card for a brand
-router.post("/:id/issues", (req, res) => {
+router.post("/:id/issues", async (req, res) => {
   try {
     const brandId = parseInt(req.params.id);
 
@@ -110,7 +77,12 @@ router.post("/:id/issues", (req, res) => {
       return res.status(400).json({ error: "Invalid brand ID format" });
     }
 
-    const brand = brands.find((b) => b.id === brandId && b.isActive);
+    const brand = await Brand.findOne({
+      where: { 
+        id: brandId, 
+        isActive: true 
+      }
+    });
 
     if (!brand) {
       return res.status(404).json({ error: "Brand not found" });
@@ -171,13 +143,11 @@ router.post("/:id/issues", (req, res) => {
       }
     }
 
-    // Generate unique activation code
-    const activationCode =
-      Math.random().toString(36).substring(2, 15) +
-      Math.random().toString(36).substring(2, 15);
+    // Generate cryptographically secure activation code
+    const activationCode = crypto.randomBytes(16).toString('hex').toUpperCase();
 
-    const giftCard = {
-      id: uuidv4(),
+    // Build gift card data object
+    const giftCardData = {
       brandId: brandId,
       brandName: brand.name,
       amount: parseFloat(amount),
@@ -188,32 +158,31 @@ router.post("/:id/issues", (req, res) => {
       deliveryType: deliveryType,
       deliveryTime: deliveryTime,
       status: "active",
-      issuedAt: new Date().toISOString(),
       isUsed: false,
     };
 
     // Only include optional fields if they have values
     if (senderName) {
-      giftCard.senderName = senderName;
+      giftCardData.senderName = senderName;
     }
     
     if (recipientName) {
-      giftCard.recipientName = recipientName;
+      giftCardData.recipientName = recipientName;
     }
     
     if (pin) {
-      giftCard.pin = pin;
+      giftCardData.pin = pin;
     }
     
     if (deliveryTime === 'custom' && deliveryDate) {
-      giftCard.deliveryDate = deliveryDate;
+      giftCardData.deliveryDate = deliveryDate;
     }
     
     if (deliveryTime === 'custom' && period) {
-      giftCard.period = period;
+      giftCardData.period = period;
     }
 
-    issuedCards.push(giftCard);
+    const giftCard = await GiftCard.create(giftCardData);
 
     // Build response data, only including fields that have values
     const responseData = {
@@ -252,12 +221,13 @@ router.post("/:id/issues", (req, res) => {
       data: responseData,
     });
   } catch (error) {
+    console.error('Error issuing gift card:', error);
     res.status(500).json({ error: "Failed to issue gift card" });
   }
 });
 
 // GET /api/brands/:id/issues - List issued cards for a brand with pagination
-router.get("/:id/issues", (req, res) => {
+router.get("/:id/issues", async (req, res) => {
   try {
     const brandId = parseInt(req.params.id);
 
@@ -266,7 +236,7 @@ router.get("/:id/issues", (req, res) => {
       return res.status(400).json({ error: "Invalid brand ID format" });
     }
 
-    const brand = brands.find((b) => b.id === brandId);
+    const brand = await Brand.findByPk(brandId);
 
     if (!brand) {
       return res.status(404).json({ error: "Brand not found" });
@@ -276,18 +246,22 @@ router.get("/:id/issues", (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
 
-    const brandCards = issuedCards.filter((card) => card.brandId === brandId);
-    const paginatedCards = brandCards.slice(offset, offset + limit);
+    const { count, rows } = await GiftCard.findAndCountAll({
+      where: { brandId: brandId },
+      limit: limit,
+      offset: offset,
+      order: [['issuedAt', 'DESC']],
+    });
 
     res.json({
       status: "success",
-      data: paginatedCards,
+      data: rows,
       pagination: {
         page: page,
         limit: limit,
-        total: brandCards.length,
-        totalPages: Math.ceil(brandCards.length / limit),
-        hasNext: page < Math.ceil(brandCards.length / limit),
+        total: count,
+        totalPages: Math.ceil(count / limit),
+        hasNext: page < Math.ceil(count / limit),
         hasPrev: page > 1,
       },
       brand: {
@@ -296,6 +270,7 @@ router.get("/:id/issues", (req, res) => {
       },
     });
   } catch (error) {
+    console.error('Error fetching issued cards:', error);
     res.status(500).json({ error: "Failed to fetch issued cards" });
   }
 });
