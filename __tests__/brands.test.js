@@ -1,48 +1,14 @@
 const request = require("supertest");
 const { app } = require("../server");
-const { Brand, GiftCard, initializeDatabase } = require("../models");
+const { Brand, GiftCard, initializeTestDatabase } = require("../models");
 
 // Set test environment
-process.env.NODE_ENV = 'test';
+process.env.NODE_ENV = "test";
 
 describe("Gift Card API", () => {
   // Set up test database
   beforeAll(async () => {
-    await initializeDatabase();
-    
-    // Seed test brands
-    await Brand.bulkCreate([
-      {
-        name: "Lazada",
-        description: "Online shopping platform",
-        logo: "lazada-logo.png",
-        isActive: true,
-      },
-      {
-        name: "Grab",
-        description: "Southeast Asian super app",
-        logo: "grab-logo.png",
-        isActive: true,
-      },
-      {
-        name: "Amazon",
-        description: "Global e-commerce and cloud computing",
-        logo: "amazon-logo.png",
-        isActive: true,
-      },
-      {
-        name: "Subway",
-        description: "Fast food restaurant chain",
-        logo: "subway-logo.png",
-        isActive: true,
-      },
-      {
-        name: "Esprit",
-        description: "Fashion and lifestyle brand",
-        logo: "esprit-logo.png",
-        isActive: true,
-      },
-    ]);
+    await initializeTestDatabase();
   });
 
   // Clean up after each test
@@ -64,18 +30,21 @@ describe("Gift Card API", () => {
     it("should return all brands with pagination", async () => {
       const res = await request(app).get("/api/brands").expect(200);
 
+      // Query actual database count instead of hardcoded number
+      const totalBrands = await Brand.count();
+      
       expect(res.body.status).toBe("success");
-      expect(res.body.data).toHaveLength(5);
+      expect(res.body.data).toHaveLength(totalBrands);
       expect(res.body.pagination).toMatchObject({
         page: 1,
         limit: 10,
-        total: 5,
-        totalPages: 1,
+        total: totalBrands,
+        totalPages: Math.ceil(totalBrands / 10),
         hasNext: false,
         hasPrev: false,
       });
 
-      // Check if all required brands are present
+      // Check if core brands are present (flexible for any additional brands)
       const brandNames = res.body.data.map((brand) => brand.name);
       expect(brandNames).toEqual(
         expect.arrayContaining(["Lazada", "Grab", "Amazon", "Subway", "Esprit"])
@@ -87,13 +56,16 @@ describe("Gift Card API", () => {
         .get("/api/brands?page=1&limit=2")
         .expect(200);
 
+      // Query actual database count
+      const totalBrands = await Brand.count();
+
       expect(res.body.data).toHaveLength(2);
       expect(res.body.pagination).toMatchObject({
         page: 1,
         limit: 2,
-        total: 5,
-        totalPages: 3,
-        hasNext: true,
+        total: totalBrands,
+        totalPages: Math.ceil(totalBrands / 2),
+        hasNext: totalBrands > 2,
         hasPrev: false,
       });
     });
@@ -103,13 +75,17 @@ describe("Gift Card API", () => {
         .get("/api/brands?page=2&limit=2")
         .expect(200);
 
-      expect(res.body.data).toHaveLength(2);
+      // Query actual database count
+      const totalBrands = await Brand.count();
+      const expectedLength = Math.min(2, Math.max(0, totalBrands - 2)); // Min of 2 or remaining items
+
+      expect(res.body.data).toHaveLength(expectedLength);
       expect(res.body.pagination).toMatchObject({
         page: 2,
         limit: 2,
-        total: 5,
-        totalPages: 3,
-        hasNext: true,
+        total: totalBrands,
+        totalPages: Math.ceil(totalBrands / 2),
+        hasNext: totalBrands > 4, // More than 2 pages worth
         hasPrev: true,
       });
     });
@@ -156,7 +132,7 @@ describe("Gift Card API", () => {
         deliveryType: "send_as_gift",
         deliveryTime: "custom",
         deliveryDate: "2025-12-25",
-        period: "afternoon"
+        period: "afternoon",
       };
 
       const res = await request(app)
@@ -177,7 +153,7 @@ describe("Gift Card API", () => {
         deliveryType: "send_as_gift",
         deliveryTime: "custom",
         deliveryDate: "2025-12-25",
-        period: "afternoon"
+        period: "afternoon",
       });
       expect(res.body.data.id).toBeDefined();
       expect(res.body.data.activationCode).toBeDefined();
@@ -191,7 +167,7 @@ describe("Gift Card API", () => {
         recipientPhone: "+6591111111",
         message: "Enjoy!",
         deliveryType: "personal",
-        deliveryTime: "immediately"
+        deliveryTime: "immediately",
       };
 
       const res = await request(app)
@@ -206,13 +182,13 @@ describe("Gift Card API", () => {
         recipientPhone: "+6591111111",
         message: "Enjoy!",
         deliveryType: "personal",
-        deliveryTime: "immediately"
+        deliveryTime: "immediately",
       });
       // Optional fields should not be present in response
-      expect(res.body.data).not.toHaveProperty('senderName');
-      expect(res.body.data).not.toHaveProperty('recipientName');
-      expect(res.body.data).not.toHaveProperty('deliveryDate');
-      expect(res.body.data).not.toHaveProperty('period');
+      expect(res.body.data).not.toHaveProperty("senderName");
+      expect(res.body.data).not.toHaveProperty("recipientName");
+      expect(res.body.data).not.toHaveProperty("deliveryDate");
+      expect(res.body.data).not.toHaveProperty("period");
     });
 
     it("should not require delivery date and period for immediate delivery", async () => {
@@ -221,7 +197,7 @@ describe("Gift Card API", () => {
         recipientEmail: "test@example.com",
         recipientPhone: "+6591234567",
         deliveryType: "personal",
-        deliveryTime: "immediately"
+        deliveryTime: "immediately",
       };
 
       const res = await request(app)
@@ -230,8 +206,8 @@ describe("Gift Card API", () => {
         .expect(201);
 
       expect(res.body.status).toBe("success");
-      expect(res.body.data).not.toHaveProperty('deliveryDate');
-      expect(res.body.data).not.toHaveProperty('period');
+      expect(res.body.data).not.toHaveProperty("deliveryDate");
+      expect(res.body.data).not.toHaveProperty("period");
     });
 
     it("should require valid amount", async () => {
@@ -242,7 +218,7 @@ describe("Gift Card API", () => {
         recipientEmail: "jane@example.com",
         recipientPhone: "+6591234567",
         deliveryType: "personal",
-        deliveryTime: "immediately"
+        deliveryTime: "immediately",
       };
 
       const res = await request(app)
@@ -259,7 +235,7 @@ describe("Gift Card API", () => {
         recipientEmail: "jane@example.com",
         recipientPhone: "+6591234567",
         deliveryType: "personal",
-        deliveryTime: "immediately"
+        deliveryTime: "immediately",
       };
 
       const res = await request(app)
@@ -276,7 +252,7 @@ describe("Gift Card API", () => {
         recipientEmail: "jane@example.com",
         recipientPhone: "+6591234567",
         deliveryType: "personal",
-        deliveryTime: "immediately"
+        deliveryTime: "immediately",
       };
 
       const res = await request(app)
@@ -294,7 +270,7 @@ describe("Gift Card API", () => {
         recipientEmail: "jane@example.com",
         recipientPhone: "+6591234567",
         deliveryType: "send_as_gift",
-        deliveryTime: "immediately"
+        deliveryTime: "immediately",
       };
 
       const res = await request(app)
@@ -302,7 +278,9 @@ describe("Gift Card API", () => {
         .send(invalidData)
         .expect(400);
 
-      expect(res.body.error).toBe("Sender name is required when delivery type is send_as_gift");
+      expect(res.body.error).toBe(
+        "Sender name is required when delivery type is send_as_gift"
+      );
     });
 
     it("should require recipient name when delivery type is send_as_gift", async () => {
@@ -312,7 +290,7 @@ describe("Gift Card API", () => {
         recipientEmail: "jane@example.com",
         recipientPhone: "+6591234567",
         deliveryType: "send_as_gift",
-        deliveryTime: "immediately"
+        deliveryTime: "immediately",
       };
 
       const res = await request(app)
@@ -320,7 +298,9 @@ describe("Gift Card API", () => {
         .send(invalidData)
         .expect(400);
 
-      expect(res.body.error).toBe("Recipient name is required when delivery type is send_as_gift");
+      expect(res.body.error).toBe(
+        "Recipient name is required when delivery type is send_as_gift"
+      );
     });
 
     it("should require recipient email", async () => {
@@ -330,7 +310,7 @@ describe("Gift Card API", () => {
         recipientName: "Jane Smith",
         recipientPhone: "+6591234567",
         deliveryType: "personal",
-        deliveryTime: "immediately"
+        deliveryTime: "immediately",
       };
 
       const res = await request(app)
@@ -348,7 +328,7 @@ describe("Gift Card API", () => {
         recipientName: "Jane Smith",
         recipientEmail: "jane@example.com",
         deliveryType: "personal",
-        deliveryTime: "immediately"
+        deliveryTime: "immediately",
       };
 
       const res = await request(app)
@@ -367,7 +347,7 @@ describe("Gift Card API", () => {
         recipientEmail: "jane@example.com",
         recipientPhone: "+6591234567",
         deliveryType: "invalid_type",
-        deliveryTime: "immediately"
+        deliveryTime: "immediately",
       };
 
       const res = await request(app)
@@ -375,7 +355,9 @@ describe("Gift Card API", () => {
         .send(invalidData)
         .expect(400);
 
-      expect(res.body.error).toBe("Valid delivery type is required (personal or send_as_gift)");
+      expect(res.body.error).toBe(
+        "Valid delivery type is required (personal or send_as_gift)"
+      );
     });
 
     it("should require valid delivery time", async () => {
@@ -386,7 +368,7 @@ describe("Gift Card API", () => {
         recipientEmail: "jane@example.com",
         recipientPhone: "+6591234567",
         deliveryType: "personal",
-        deliveryTime: "invalid_time"
+        deliveryTime: "invalid_time",
       };
 
       const res = await request(app)
@@ -394,7 +376,9 @@ describe("Gift Card API", () => {
         .send(invalidData)
         .expect(400);
 
-      expect(res.body.error).toBe("Valid delivery time is required (immediately or custom)");
+      expect(res.body.error).toBe(
+        "Valid delivery time is required (immediately or custom)"
+      );
     });
 
     it("should require delivery date for custom delivery time", async () => {
@@ -405,7 +389,7 @@ describe("Gift Card API", () => {
         recipientEmail: "jane@example.com",
         recipientPhone: "+6591234567",
         deliveryType: "personal",
-        deliveryTime: "custom"
+        deliveryTime: "custom",
       };
 
       const res = await request(app)
@@ -413,7 +397,9 @@ describe("Gift Card API", () => {
         .send(invalidData)
         .expect(400);
 
-      expect(res.body.error).toBe("Delivery date is required when delivery time is custom");
+      expect(res.body.error).toBe(
+        "Delivery date is required when delivery time is custom"
+      );
     });
 
     it("should require valid period for custom delivery time", async () => {
@@ -426,7 +412,7 @@ describe("Gift Card API", () => {
         deliveryType: "personal",
         deliveryTime: "custom",
         deliveryDate: "2025-12-25",
-        period: "invalid_period"
+        period: "invalid_period",
       };
 
       const res = await request(app)
@@ -434,7 +420,9 @@ describe("Gift Card API", () => {
         .send(invalidData)
         .expect(400);
 
-      expect(res.body.error).toBe("Valid period is required when delivery time is custom (morning, afternoon, or evening)");
+      expect(res.body.error).toBe(
+        "Valid period is required when delivery time is custom (morning, afternoon, or evening)"
+      );
     });
 
     it("should return 404 for non-existent brand", async () => {
@@ -445,7 +433,7 @@ describe("Gift Card API", () => {
         recipientEmail: "jane@example.com",
         recipientPhone: "+6591234567",
         deliveryType: "personal",
-        deliveryTime: "immediately"
+        deliveryTime: "immediately",
       };
 
       const res = await request(app)
@@ -464,7 +452,7 @@ describe("Gift Card API", () => {
         recipientEmail: "jane@example.com",
         recipientPhone: "+6591234567",
         deliveryType: "personal",
-        deliveryTime: "immediately"
+        deliveryTime: "immediately",
       };
 
       const res = await request(app)
@@ -485,7 +473,7 @@ describe("Gift Card API", () => {
         recipientPhone: "+6512345678",
         message: "Test card",
         deliveryType: "personal",
-        deliveryTime: "immediately"
+        deliveryTime: "immediately",
       });
     });
 
