@@ -3,6 +3,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const { initializeDatabase } = require("./models");
+const { specs, swaggerUi } = require("./swagger");
 require("dotenv").config();
 
 const app = express();
@@ -16,7 +17,18 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use("/api/brands", require("./routes/brands"));
+app.use("/api/brands", require("./routes/index"));
+
+// Swagger API Documentation
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(specs, {
+    explorer: true,
+    customCss: ".swagger-ui .topbar { display: none }",
+    customSiteTitle: "Gift Card API Documentation",
+  })
+);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
