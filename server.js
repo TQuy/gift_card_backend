@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const { initializeDatabase } = require("./models");
 require("dotenv").config();
 
 const app = express();
@@ -35,11 +36,25 @@ app.use((err, req, res, next) => {
 
 let server;
 
-if (require.main === module) {
-  // Only start server if this file is run directly, not when imported for tests
-  server = app.listen(PORT, () => {
-    console.log(`Gift Card API server is running on port ${PORT}`);
-  });
-}
+// Initialize database and start server
+const startServer = async () => {
+  try {
+    await initializeDatabase();
+    console.log('Database initialized successfully');
+    
+    if (require.main === module) {
+      // Only start server if this file is run directly, not when imported for tests
+      server = app.listen(PORT, () => {
+        console.log(`Gift Card API server is running on port ${PORT}`);
+      });
+    }
+  } catch (error) {
+    console.error('Failed to initialize database:', error);
+    process.exit(1);
+  }
+};
+
+// Start the server
+startServer();
 
 module.exports = { app, server };

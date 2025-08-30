@@ -1,7 +1,54 @@
 const request = require("supertest");
 const { app } = require("../server");
+const { Brand, GiftCard, initializeDatabase } = require("../models");
+
+// Set test environment
+process.env.NODE_ENV = 'test';
 
 describe("Gift Card API", () => {
+  // Set up test database
+  beforeAll(async () => {
+    await initializeDatabase();
+    
+    // Seed test brands
+    await Brand.bulkCreate([
+      {
+        name: "Lazada",
+        description: "Online shopping platform",
+        logo: "lazada-logo.png",
+        isActive: true,
+      },
+      {
+        name: "Grab",
+        description: "Southeast Asian super app",
+        logo: "grab-logo.png",
+        isActive: true,
+      },
+      {
+        name: "Amazon",
+        description: "Global e-commerce and cloud computing",
+        logo: "amazon-logo.png",
+        isActive: true,
+      },
+      {
+        name: "Subway",
+        description: "Fast food restaurant chain",
+        logo: "subway-logo.png",
+        isActive: true,
+      },
+      {
+        name: "Esprit",
+        description: "Fashion and lifestyle brand",
+        logo: "esprit-logo.png",
+        isActive: true,
+      },
+    ]);
+  });
+
+  // Clean up after each test
+  afterEach(async () => {
+    await GiftCard.destroy({ where: {} });
+  });
   describe("GET /api/health", () => {
     it("should return health status", async () => {
       const res = await request(app).get("/api/health").expect(200);
