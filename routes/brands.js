@@ -54,7 +54,7 @@ router.get("/", getAllBrands);
  * @swagger
  * /api/brands/{id}:
  *   get:
- *     summary: Get a specific brand by ID
+ *     summary: Get a specific brand by ID with gift card count
  *     tags: [Brands]
  *     parameters:
  *       - in: path
@@ -65,7 +65,7 @@ router.get("/", getAllBrands);
  *         description: Brand ID
  *     responses:
  *       200:
- *         description: Brand details
+ *         description: Brand details with gift card count
  *         content:
  *           application/json:
  *             schema:
@@ -75,7 +75,41 @@ router.get("/", getAllBrands);
  *                   type: string
  *                   example: success
  *                 data:
- *                   $ref: '#/components/schemas/Brand'
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     name:
+ *                       type: string
+ *                       example: "Lazada"
+ *                     description:
+ *                       type: string
+ *                       example: "Online shopping platform"
+ *                     logo:
+ *                       type: string
+ *                       example: "lazada-logo.png"
+ *                     isActive:
+ *                       type: boolean
+ *                       example: true
+ *                     country:
+ *                       type: string
+ *                       example: "Singapore"
+ *                     phoneNumber:
+ *                       type: string
+ *                       example: "+65 6123 4567"
+ *                     company:
+ *                       type: string
+ *                       example: "Lazada Singapore Pte Ltd"
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *                     products:
+ *                       type: integer
+ *                       example: 5
  *       400:
  *         description: Invalid brand ID format
  *         content:

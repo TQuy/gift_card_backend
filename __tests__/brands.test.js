@@ -32,7 +32,7 @@ describe("Gift Card API", () => {
 
       // Query actual database count instead of hardcoded number
       const totalBrands = await Brand.count();
-      
+
       expect(res.body.status).toBe("success");
       expect(res.body.data).toHaveLength(totalBrands);
       expect(res.body.pagination).toMatchObject({
