@@ -10,7 +10,9 @@
     "test:watch": "NODE_ENV=test jest --watch",
     "db:populate": "node scripts/populate-database.js",
     "db:populate:clear": "node scripts/populate-database.js --clear",
-    "db:seed:brands": "node scripts/populate-database.js --brands-only"
+    "db:seed:brands": "node scripts/populate-database.js --brands-only",
+    "db:truncate": "node scripts/truncate-tables.js",
+    "db:truncate:keep-brands": "node scripts/truncate-tables.js --keep-brands"
   },
   "keywords": [
     "gift-card",
