@@ -83,6 +83,26 @@ const sampleBrands = [
     company: "Spotify AB",
     products: getRandomProducts(),
   },
+  {
+    name: "Netflix 2",
+    description: "Streaming entertainment service",
+    logo: "https://logos-world.net/wp-content/uploads/2020/04/Netflix-Logo.png",
+    isActive: true,
+    country: "Global",
+    phoneNumber: "+1 866 579 7172",
+    company: "Netflix, Inc.",
+    products: getRandomProducts(),
+  },
+  {
+    name: "Spotify 2",
+    description: "Music streaming platform",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/8/84/Spotify_icon.svg",
+    isActive: true,
+    country: "Global",
+    phoneNumber: "+46 8 510 520 00",
+    company: "Spotify AB",
+    products: getRandomProducts(),
+  },
 ];
 
 function generateActivationCode() {
