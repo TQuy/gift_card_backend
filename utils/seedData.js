@@ -2,12 +2,16 @@ function getRandomProducts() {
   return Math.floor(Math.random() * 500) + 1;
 }
 
+// Import USER_ROLES constant
+const BRAND_STATUS = { active: 1, inactive: 0 };
+const USER_ROLES = { ADMIN: 1, USER: 2 };
+
 const sampleBrands = [
   {
     name: "Grab",
     description: "Southeast Asian super app",
     logo: "https://upload.wikimedia.org/wikipedia/en/1/12/Grab_%28application%29_logo.svg",
-    isActive: true,
+    status: BRAND_STATUS.active,
     country: "Singapore",
     phoneNumber: "+65 6234 5678",
     company: "Grab Holdings Inc.",
@@ -17,7 +21,7 @@ const sampleBrands = [
     name: "Amazon",
     description: "Global e-commerce and cloud computing",
     logo: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg",
-    isActive: true,
+    status: BRAND_STATUS.active,
     country: "Global",
     phoneNumber: "+1 206 266 1000",
     company: "Amazon.com, Inc.",
@@ -27,7 +31,7 @@ const sampleBrands = [
     name: "Esprit",
     description: "Fashion and lifestyle brand",
     logo: "https://upload.wikimedia.org/wikipedia/commons/4/49/Esprit.svg",
-    isActive: true,
+    status: BRAND_STATUS.active,
     country: "Germany",
     phoneNumber: "+49 211 3006 0",
     company: "Esprit Holdings Limited",
@@ -37,7 +41,7 @@ const sampleBrands = [
     name: "Subway",
     description: "Fast food restaurant chain",
     logo: "https://upload.wikimedia.org/wikipedia/commons/5/5c/Subway_2016_logo.svg",
-    isActive: true,
+    status: BRAND_STATUS.active,
     country: "Global",
     phoneNumber: "+1 203 877 4281",
     company: "Subway Restaurants",
@@ -47,7 +51,7 @@ const sampleBrands = [
     name: "Lazada",
     description: "Online shopping platform",
     logo: "https://upload.wikimedia.org/wikipedia/commons/4/4d/Lazada_%282019%29.svg",
-    isActive: true,
+    status: BRAND_STATUS.active,
     country: "Singapore",
     phoneNumber: "+65 6123 4567",
     company: "Lazada Singapore Pte Ltd",
@@ -57,7 +61,7 @@ const sampleBrands = [
     name: "Kaspersky",
     description: "Cybersecurity and antivirus provider",
     logo: "https://upload.wikimedia.org/wikipedia/commons/2/25/Kaspersky_logo.svg",
-    isActive: true,
+    status: BRAND_STATUS.active,
     country: "Global",
     phoneNumber: "+7 495 797 8700",
     company: "Kaspersky Lab",
@@ -67,7 +71,7 @@ const sampleBrands = [
     name: "Netflix",
     description: "Streaming entertainment service",
     logo: "https://logos-world.net/wp-content/uploads/2020/04/Netflix-Logo.png",
-    isActive: true,
+    status: BRAND_STATUS.active,
     country: "Global",
     phoneNumber: "+1 866 579 7172",
     company: "Netflix, Inc.",
@@ -77,7 +81,7 @@ const sampleBrands = [
     name: "Spotify",
     description: "Music streaming platform",
     logo: "https://upload.wikimedia.org/wikipedia/commons/8/84/Spotify_icon.svg",
-    isActive: true,
+    status: BRAND_STATUS.active,
     country: "Global",
     phoneNumber: "+46 8 510 520 00",
     company: "Spotify AB",
@@ -87,7 +91,7 @@ const sampleBrands = [
     name: "Netflix 2",
     description: "Streaming entertainment service",
     logo: "https://logos-world.net/wp-content/uploads/2020/04/Netflix-Logo.png",
-    isActive: true,
+    status: BRAND_STATUS.active,
     country: "Global",
     phoneNumber: "+1 866 579 7172",
     company: "Netflix, Inc.",
@@ -97,11 +101,21 @@ const sampleBrands = [
     name: "Spotify 2",
     description: "Music streaming platform",
     logo: "https://upload.wikimedia.org/wikipedia/commons/8/84/Spotify_icon.svg",
-    isActive: true,
+    status: BRAND_STATUS.active,
     country: "Global",
     phoneNumber: "+46 8 510 520 00",
     company: "Spotify AB",
     products: getRandomProducts(),
+  },
+];
+
+// Sample users
+const sampleUsers = [
+  {
+    username: "admin",
+    email: "admin@example.com",
+    password: "1", // Will be hashed by the model hook
+    role: USER_ROLES.ADMIN,
   },
 ];
 
@@ -213,33 +227,69 @@ async function seedGiftCards(GiftCard, options = {}) {
 }
 
 /**
- * Seed both brands and gift cards
- * @param {Object} models - Object containing Brand and GiftCard models
+ * Seed users into the database
+ * @param {Object} User - Sequelize User model
  * @param {Object} options - Seeding options
- * @returns {Promise<Object>} Object containing created brands and gift cards
+ * @param {boolean} options.force - Whether to clear existing data
+ * @param {boolean} options.ignoreDuplicates - Whether to ignore duplicate entries
+ * @returns {Promise<Array>} Array of created users
  */
-async function seedDatabase({ Brand, GiftCard }, options = {}) {
+async function seedUsers(User, options = {}) {
+  const { force = false, ignoreDuplicates = true } = options;
+  
+  if (force) {
+    await User.destroy({ where: {} });
+  }
+  
+  const createdUsers = await User.bulkCreate(sampleUsers, {
+    ignoreDuplicates,
+    returning: true,
+    individualHooks: true, // Important: enables password hashing hooks
+  });
+  
+  return createdUsers;
+}
+
+/**
+ * Seed both brands and gift cards
+ * @param {Object} models - Object containing Brand, GiftCard, and User models
+ * @param {Object} options - Seeding options
+ * @returns {Promise<Object>} Object containing created brands, gift cards, and users
+ */
+async function seedDatabase({ Brand, GiftCard, User }, options = {}) {
   const {
     brandsOnly = false,
+    usersOnly = false,
     force = false,
     ignoreDuplicates = true,
   } = options;
 
-  // Seed brands
-  const createdBrands = await seedBrands(Brand, { force, ignoreDuplicates });
-
+  let createdBrands = [];
   let createdGiftCards = [];
-  if (!brandsOnly) {
-    // Seed gift cards
-    createdGiftCards = await seedGiftCards(GiftCard, {
-      force,
-      ignoreDuplicates,
-    });
+  let createdUsers = [];
+
+  // Seed users if User model is provided
+  if (User) {
+    createdUsers = await seedUsers(User, { force, ignoreDuplicates });
+  }
+
+  // Seed brands unless usersOnly is true
+  if (!usersOnly) {
+    createdBrands = await seedBrands(Brand, { force, ignoreDuplicates });
+
+    // Seed gift cards unless brandsOnly is true
+    if (!brandsOnly) {
+      createdGiftCards = await seedGiftCards(GiftCard, {
+        force,
+        ignoreDuplicates,
+      });
+    }
   }
 
   return {
     brands: createdBrands,
     giftCards: createdGiftCards,
+    users: createdUsers,
   };
 }
 
@@ -255,10 +305,12 @@ async function isDatabaseEmpty(Brand) {
 
 module.exports = {
   sampleBrands,
+  sampleUsers,
   generateActivationCode,
   generateSampleGiftCards,
   seedBrands,
   seedGiftCards,
+  seedUsers,
   seedDatabase,
   isDatabaseEmpty,
 };

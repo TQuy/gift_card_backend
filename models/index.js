@@ -17,6 +17,7 @@ const sequelize = new Sequelize({
 // Import models
 const Brand = require("./Brand")(sequelize, Sequelize.DataTypes);
 const GiftCard = require("./GiftCard")(sequelize, Sequelize.DataTypes);
+const User = require("./User")(sequelize, Sequelize.DataTypes);
 
 // Define associations
 Brand.hasMany(GiftCard, { foreignKey: "brandId", as: "giftCards" });
@@ -37,7 +38,7 @@ const initializeDatabase = async () => {
 const initializeTestDatabase = async () => {
   try {
     await initializeDatabase();
-    await seedDatabase({ Brand, GiftCard }, { force: true });
+    await seedDatabase({ Brand, GiftCard, User }, { force: true });
     console.log("Test database seeded successfully");
   } catch (error) {
     console.error("Test database initialization failed:", error);
@@ -49,6 +50,7 @@ module.exports = {
   sequelize,
   Brand,
   GiftCard,
+  User,
   initializeDatabase,
   initializeTestDatabase,
 };

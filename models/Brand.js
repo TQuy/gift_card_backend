@@ -1,3 +1,5 @@
+const BRAND_STATUS = { active: 1, inactive: 0 };
+
 module.exports = (sequelize, DataTypes) => {
   const Brand = sequelize.define(
     "Brand",
@@ -22,10 +24,10 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: "",
       },
-      isActive: {
-        type: DataTypes.BOOLEAN,
+      status: {
+        type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: true,
+        defaultValue: 1,
       },
       country: {
         type: DataTypes.STRING,
@@ -56,5 +58,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
+  Brand.BRAND_STATUS = BRAND_STATUS;
   return Brand;
 };

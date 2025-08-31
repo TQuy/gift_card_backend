@@ -11,6 +11,7 @@
     "db:populate": "node scripts/populate-database.js",
     "db:populate:clear": "node scripts/populate-database.js --clear",
     "db:seed:brands": "node scripts/populate-database.js --brands-only",
+    "db:seed:users": "node scripts/populate-database.js --users-only",
     "db:truncate": "node scripts/truncate-tables.js",
     "db:truncate:keep-brands": "node scripts/truncate-tables.js --keep-brands"
   },
@@ -24,6 +25,7 @@
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^3.0.2",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
