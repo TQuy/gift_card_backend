@@ -1,66 +1,87 @@
+function getRandomProducts() {
+  return Math.floor(Math.random() * 500) + 1;
+}
+
 const sampleBrands = [
-  {
-    name: "Lazada",
-    description: "Online shopping platform",
-    logo: "lazada-logo.png",
-    isActive: true,
-    country: "Singapore",
-    phoneNumber: "+65 6123 4567",
-    company: "Lazada Singapore Pte Ltd",
-  },
   {
     name: "Grab",
     description: "Southeast Asian super app",
-    logo: "grab-logo.png",
+    logo: "https://upload.wikimedia.org/wikipedia/en/1/12/Grab_%28application%29_logo.svg",
     isActive: true,
     country: "Singapore",
     phoneNumber: "+65 6234 5678",
     company: "Grab Holdings Inc.",
+    products: getRandomProducts(),
   },
   {
     name: "Amazon",
     description: "Global e-commerce and cloud computing",
-    logo: "amazon-logo.png",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg",
     isActive: true,
     country: "Global",
     phoneNumber: "+1 206 266 1000",
     company: "Amazon.com, Inc.",
-  },
-  {
-    name: "Subway",
-    description: "Fast food restaurant chain",
-    logo: "subway-logo.png",
-    isActive: true,
-    country: "Global",
-    phoneNumber: "+1 203 877 4281",
-    company: "Subway Restaurants",
+    products: getRandomProducts(),
   },
   {
     name: "Esprit",
     description: "Fashion and lifestyle brand",
-    logo: "esprit-logo.png",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/4/49/Esprit.svg",
     isActive: true,
     country: "Germany",
     phoneNumber: "+49 211 3006 0",
     company: "Esprit Holdings Limited",
+    products: getRandomProducts(),
   },
   {
-    name: "Starbucks",
-    description: "Global coffeehouse chain",
-    logo: "starbucks-logo.png",
-    isActive: true,
-    country: "Global",
-    phoneNumber: "+1 800 782 7282",
-    company: "Starbucks Corporation",
-  },
-  {
-    name: "McDonald's",
+    name: "Subway",
     description: "Fast food restaurant chain",
-    logo: "mcdonalds-logo.png",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/5/5c/Subway_2016_logo.svg",
     isActive: true,
     country: "Global",
-    phoneNumber: "+1 630 623 3000",
-    company: "McDonald's Corporation",
+    phoneNumber: "+1 203 877 4281",
+    company: "Subway Restaurants",
+    products: getRandomProducts(),
+  },
+  {
+    name: "Lazada",
+    description: "Online shopping platform",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/4/4d/Lazada_%282019%29.svg",
+    isActive: true,
+    country: "Singapore",
+    phoneNumber: "+65 6123 4567",
+    company: "Lazada Singapore Pte Ltd",
+    products: getRandomProducts(),
+  },
+  {
+    name: "Kaspersky",
+    description: "Cybersecurity and antivirus provider",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/2/25/Kaspersky_logo.svg",
+    isActive: true,
+    country: "Global",
+    phoneNumber: "+7 495 797 8700",
+    company: "Kaspersky Lab",
+    products: getRandomProducts(),
+  },
+  {
+    name: "Netflix",
+    description: "Streaming entertainment service",
+    logo: "https://logos-world.net/wp-content/uploads/2020/04/Netflix-Logo.png",
+    isActive: true,
+    country: "Global",
+    phoneNumber: "+1 866 579 7172",
+    company: "Netflix, Inc.",
+    products: getRandomProducts(),
+  },
+  {
+    name: "Spotify",
+    description: "Music streaming platform",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/8/84/Spotify_icon.svg",
+    isActive: true,
+    country: "Global",
+    phoneNumber: "+46 8 510 520 00",
+    company: "Spotify AB",
+    products: getRandomProducts(),
   },
 ];
 
@@ -70,31 +91,55 @@ function generateActivationCode() {
 
 function generateSampleGiftCards(brands) {
   const sampleCards = [];
-  
+
   brands.forEach((brand, index) => {
     // Generate 2-3 gift cards per brand
     for (let i = 0; i < Math.floor(Math.random() * 2) + 2; i++) {
       sampleCards.push({
         brandId: index + 1, // Assuming auto-increment starts at 1
         brandName: brand.name,
-        amount: [25.00, 50.00, 100.00, 200.00][Math.floor(Math.random() * 4)],
+        amount: [25.0, 50.0, 100.0, 200.0][Math.floor(Math.random() * 4)],
         activationCode: generateActivationCode(),
-        senderName: ['John Doe', 'Jane Smith', 'Alice Johnson', 'Bob Wilson'][Math.floor(Math.random() * 4)],
-        recipientName: ['Mike Brown', 'Sarah Davis', 'Tom Miller', 'Lisa Garcia'][Math.floor(Math.random() * 4)],
-        recipientEmail: `recipient${Math.floor(Math.random() * 1000)}@example.com`,
-        recipientPhone: `+1${Math.floor(Math.random() * 9000000000) + 1000000000}`,
-        message: ['Happy Birthday!', 'Congratulations!', 'Enjoy your gift!', 'From your friend'][Math.floor(Math.random() * 4)],
-        deliveryType: ['personal', 'send_as_gift'][Math.floor(Math.random() * 2)],
-        deliveryTime: ['immediately', 'custom'][Math.floor(Math.random() * 2)],
-        deliveryDate: new Date(Date.now() + Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        period: ['morning', 'afternoon', 'evening'][Math.floor(Math.random() * 3)],
-        status: 'active',
+        senderName: ["John Doe", "Jane Smith", "Alice Johnson", "Bob Wilson"][
+          Math.floor(Math.random() * 4)
+        ],
+        recipientName: [
+          "Mike Brown",
+          "Sarah Davis",
+          "Tom Miller",
+          "Lisa Garcia",
+        ][Math.floor(Math.random() * 4)],
+        recipientEmail: `recipient${Math.floor(
+          Math.random() * 1000
+        )}@example.com`,
+        recipientPhone: `+1${
+          Math.floor(Math.random() * 9000000000) + 1000000000
+        }`,
+        message: [
+          "Happy Birthday!",
+          "Congratulations!",
+          "Enjoy your gift!",
+          "From your friend",
+        ][Math.floor(Math.random() * 4)],
+        deliveryType: ["personal", "send_as_gift"][
+          Math.floor(Math.random() * 2)
+        ],
+        deliveryTime: ["immediately", "custom"][Math.floor(Math.random() * 2)],
+        deliveryDate: new Date(
+          Date.now() + Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000
+        )
+          .toISOString()
+          .split("T")[0],
+        period: ["morning", "afternoon", "evening"][
+          Math.floor(Math.random() * 3)
+        ],
+        status: "active",
         isUsed: Math.random() < 0.3, // 30% chance of being used
         usedAt: Math.random() < 0.3 ? new Date() : null,
       });
     }
   });
-  
+
   return sampleCards;
 }
 
@@ -108,16 +153,16 @@ function generateSampleGiftCards(brands) {
  */
 async function seedBrands(Brand, options = {}) {
   const { force = false, ignoreDuplicates = true } = options;
-  
+
   if (force) {
     await Brand.destroy({ where: {} });
   }
-  
+
   const createdBrands = await Brand.bulkCreate(sampleBrands, {
     ignoreDuplicates,
-    returning: true
+    returning: true,
   });
-  
+
   return createdBrands;
 }
 
@@ -132,18 +177,18 @@ async function seedBrands(Brand, options = {}) {
  */
 async function seedGiftCards(GiftCard, options = {}) {
   const { force = false, ignoreDuplicates = true } = options;
-  
+
   if (force) {
     await GiftCard.destroy({ where: {} });
   }
-  
+
   const sampleGiftCards = generateSampleGiftCards(sampleBrands);
-  
+
   const createdGiftCards = await GiftCard.bulkCreate(sampleGiftCards, {
     ignoreDuplicates,
-    returning: true
+    returning: true,
   });
-  
+
   return createdGiftCards;
 }
 
@@ -154,20 +199,27 @@ async function seedGiftCards(GiftCard, options = {}) {
  * @returns {Promise<Object>} Object containing created brands and gift cards
  */
 async function seedDatabase({ Brand, GiftCard }, options = {}) {
-  const { brandsOnly = false, force = false, ignoreDuplicates = true } = options;
-  
+  const {
+    brandsOnly = false,
+    force = false,
+    ignoreDuplicates = true,
+  } = options;
+
   // Seed brands
   const createdBrands = await seedBrands(Brand, { force, ignoreDuplicates });
-  
+
   let createdGiftCards = [];
   if (!brandsOnly) {
     // Seed gift cards
-    createdGiftCards = await seedGiftCards(GiftCard, { force, ignoreDuplicates });
+    createdGiftCards = await seedGiftCards(GiftCard, {
+      force,
+      ignoreDuplicates,
+    });
   }
-  
+
   return {
     brands: createdBrands,
-    giftCards: createdGiftCards
+    giftCards: createdGiftCards,
   };
 }
 

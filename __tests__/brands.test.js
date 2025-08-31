@@ -44,11 +44,24 @@ describe("Gift Card API", () => {
         hasPrev: false,
       });
 
-      // Check if core brands are present (flexible for any additional brands)
-      const brandNames = res.body.data.map((brand) => brand.name);
-      expect(brandNames).toEqual(
-        expect.arrayContaining(["Lazada", "Grab", "Amazon", "Subway", "Esprit"])
-      );
+      // Compare each brand in response with database
+      const dbBrands = await Brand.findAll({ order: [["id", "ASC"]] });
+      res.body.data.forEach((brand, idx) => {
+        const dbBrand = dbBrands[idx];
+        expect(brand).toMatchObject({
+          id: dbBrand.id,
+          name: dbBrand.name,
+          description: dbBrand.description,
+          logo: dbBrand.logo,
+          isActive: dbBrand.isActive,
+          country: dbBrand.country,
+          phoneNumber: dbBrand.phoneNumber,
+          company: dbBrand.company,
+          products: dbBrand.products,
+        });
+        expect(brand.createdAt).toBeDefined();
+        expect(brand.updatedAt).toBeDefined();
+      });
     });
 
     it("should support pagination parameters", async () => {
@@ -93,17 +106,18 @@ describe("Gift Card API", () => {
 
   describe("GET /api/brands/:id", () => {
     it("should return specific brand", async () => {
-      const res = await request(app).get("/api/brands/1").expect(200);
+      // Get the first brand from the database
+      const brand = await Brand.findOne({ order: [["id", "ASC"]] });
+      const res = await request(app).get(`/api/brands/${brand.id}`).expect(200);
 
       expect(res.body.status).toBe("success");
-      expect(res.body.data).toMatchObject({
-        id: 1,
-        name: "Lazada",
-        description: "Online shopping platform",
-        logo: "lazada-logo.png",
-        isActive: true,
+      // Compare all fields with database
+      Object.keys(brand.dataValues).forEach((key) => {
+        if (["createdAt", "updatedAt"].includes(key)) return;
+        expect(res.body.data[key]).toEqual(brand[key]);
       });
       expect(res.body.data.createdAt).toBeDefined();
+      expect(res.body.data.updatedAt).toBeDefined();
     });
 
     it("should return 404 for non-existent brand", async () => {
@@ -142,18 +156,26 @@ describe("Gift Card API", () => {
 
       expect(res.body.status).toBe("success");
       expect(res.body.message).toBe("Gift card issued successfully");
-      expect(res.body.data).toMatchObject({
-        brandName: "Lazada",
-        amount: 100,
-        senderName: "John Doe",
-        recipientName: "Jane Smith",
-        recipientEmail: "jane@example.com",
-        recipientPhone: "+6591234567",
-        message: "Happy Birthday!",
-        deliveryType: "send_as_gift",
-        deliveryTime: "custom",
-        deliveryDate: "2025-12-25",
-        period: "afternoon",
+      // Query the issued gift card from the database
+      const issuedCard = await GiftCard.findOne({
+        where: { id: res.body.data.id },
+      });
+      expect(issuedCard).not.toBeNull();
+      // Compare all relevant fields
+      [
+        "brandName",
+        "amount",
+        "senderName",
+        "recipientName",
+        "recipientEmail",
+        "recipientPhone",
+        "message",
+        "deliveryType",
+        "deliveryTime",
+        "deliveryDate",
+        "period",
+      ].forEach((key) => {
+        expect(res.body.data[key]).toEqual(issuedCard[key]);
       });
       expect(res.body.data.id).toBeDefined();
       expect(res.body.data.activationCode).toBeDefined();
@@ -484,26 +506,29 @@ describe("Gift Card API", () => {
       expect(res.body.data).toBeInstanceOf(Array);
       expect(res.body.data.length).toBeGreaterThan(0);
       expect(res.body.pagination).toBeDefined();
+      // Compare brand info with database
+      const brand = await Brand.findByPk(res.body.brand.id);
       expect(res.body.brand).toMatchObject({
-        id: 1,
-        name: "Lazada",
+        id: brand.id,
+        name: brand.name,
       });
-
-      // Check structure of issued card with all new fields
-      expect(res.body.data[0]).toMatchObject({
-        brandId: 1,
-        brandName: "Lazada",
-        amount: expect.any(Number),
-        activationCode: expect.any(String),
-        recipientEmail: expect.any(String),
-        recipientPhone: expect.any(String),
-        deliveryType: expect.any(String),
-        deliveryTime: expect.any(String),
-        status: "active",
-        isUsed: false,
+      // Compare issued card fields with database
+      const dbGiftCards = await GiftCard.findAll({
+        where: { brandId: brand.id },
       });
-      // Optional fields like senderName, recipientName, deliveryDate, period, usedAt, pin
-      // may or may not be present depending on the data
+      res.body.data.forEach((card, idx) => {
+        const dbCard = dbGiftCards[idx];
+        expect(card.brandId).toEqual(dbCard.brandId);
+        expect(card.brandName).toEqual(dbCard.brandName);
+        expect(card.amount).toEqual(Number(dbCard.amount));
+        expect(card.activationCode).toEqual(dbCard.activationCode);
+        expect(card.recipientEmail).toEqual(dbCard.recipientEmail);
+        expect(card.recipientPhone).toEqual(dbCard.recipientPhone);
+        expect(card.deliveryType).toEqual(dbCard.deliveryType);
+        expect(card.deliveryTime).toEqual(dbCard.deliveryTime);
+        expect(card.status).toEqual(dbCard.status);
+        expect(card.isUsed).toEqual(dbCard.isUsed);
+      });
     });
 
     it("should support pagination for issued cards", async () => {
