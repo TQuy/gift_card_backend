@@ -53,6 +53,7 @@ export function validateGiftCardIssueData(data: any): GiftCardValidationResult {
     recipientName,
     deliveryDate,
     period,
+    message,
   } = data;
 
   // Required field validations
@@ -72,10 +73,6 @@ export function validateGiftCardIssueData(data: any): GiftCardValidationResult {
     errors.push("Valid delivery type is required (personal or send_as_gift)");
   }
 
-  if (!deliveryTime || !["immediately", "custom"].includes(deliveryTime)) {
-    errors.push("Valid delivery time is required (immediately or custom)");
-  }
-
   // Conditional validations
   if (deliveryType === "send_as_gift") {
     if (!senderName) {
@@ -86,16 +83,22 @@ export function validateGiftCardIssueData(data: any): GiftCardValidationResult {
         "Recipient name is required when delivery type is send_as_gift"
       );
     }
-  }
-
-  if (deliveryTime === "custom") {
-    if (!deliveryDate) {
-      errors.push("Delivery date is required when delivery time is custom");
+    if (!deliveryTime || !["immediately", "custom"].includes(deliveryTime)) {
+      errors.push("Valid delivery time is required (immediately or custom)");
     }
-    if (!period || !["morning", "afternoon", "evening"].includes(period)) {
-      errors.push(
-        "Valid period is required when delivery time is custom (morning, afternoon, or evening)"
-      );
+    else if (deliveryTime === "custom") {
+      if (!deliveryDate) {
+        errors.push("Delivery date is required when delivery time is custom");
+      }
+      if (!period || !["morning", "afternoon", "evening"].includes(period)) {
+        errors.push(
+          "Valid period is required when delivery time is custom (morning, afternoon, or evening)"
+        );
+      }
+    }
+
+    if (!message) {
+      errors.push("Message is required when delivery type is send_as_gift");
     }
   }
 
