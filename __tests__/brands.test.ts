@@ -1,6 +1,11 @@
 import request from "supertest";
 import { app } from "../server";
 import { Brand, GiftCard, initializeTestDatabase } from "../models";
+import {
+  getAllActiveBrands,
+  getBrandById as getBrandByIdService,
+  brandExists
+} from "../services/brands";
 
 // Set test environment
 process.env.NODE_ENV = "test";
@@ -28,19 +33,30 @@ describe("Gift Card API", () => {
     it("should return all brands with pagination", async () => {
       const res = await request(app).get("/api/brands").expect(200);
 
+      // Get expected data from service
+      const expectedData = await getAllActiveBrands({
+        page: 1,
+        limit: 10,
+        offset: 0,
+      });
+
       expect(res.body.status).toBe("success");
       expect(res.body.data).toBeInstanceOf(Array);
       expect(res.body.pagination).toBeDefined();
       expect(res.body.data.length).toBeGreaterThan(0);
 
+      // Validate structure matches service response
+      expect(res.body.data.length).toBe(expectedData.brands.length);
+      expect(res.body.pagination.total).toBe(expectedData.pagination.total);
+
       // Check that each brand has the required fields including isActive
-      res.body.data.forEach((brand: any) => {
-        expect(brand).toHaveProperty("id");
-        expect(brand).toHaveProperty("name");
+      res.body.data.forEach((brand: any, index: number) => {
+        const expectedBrand = expectedData.brands[index];
+        expect(brand).toHaveProperty("id", expectedBrand.id);
+        expect(brand).toHaveProperty("name", expectedBrand.name);
         expect(brand).toHaveProperty("description");
         expect(brand).toHaveProperty("logo");
-        expect(brand).toHaveProperty("isActive");
-        expect(brand.isActive).toBe(true); // Since we only return active brands
+        expect(brand).toHaveProperty("isActive", true); // Since we only return active brands
         expect(brand).toHaveProperty("country");
         expect(brand).toHaveProperty("phoneNumber");
         expect(brand).toHaveProperty("company");
@@ -49,6 +65,13 @@ describe("Gift Card API", () => {
     });
 
     it("should support pagination parameters", async () => {
+      // Get expected data from service
+      const expectedData = await getAllActiveBrands({
+        page: 1,
+        limit: 2,
+        offset: 0,
+      });
+
       const res = await request(app)
         .get("/api/brands?page=1&limit=2")
         .expect(200);
@@ -56,11 +79,19 @@ describe("Gift Card API", () => {
       expect(res.body.status).toBe("success");
       expect(res.body.data).toBeInstanceOf(Array);
       expect(res.body.data.length).toBeLessThanOrEqual(2);
+      expect(res.body.data.length).toBe(expectedData.brands.length);
       expect(res.body.pagination.page).toBe(1);
       expect(res.body.pagination.limit).toBe(2);
     });
 
     it("should handle page 2 correctly", async () => {
+      // Get expected data from service
+      const expectedData = await getAllActiveBrands({
+        page: 2,
+        limit: 2,
+        offset: 2,
+      });
+
       const res = await request(app)
         .get("/api/brands?page=2&limit=2")
         .expect(200);
@@ -68,22 +99,37 @@ describe("Gift Card API", () => {
       expect(res.body.status).toBe("success");
       expect(res.body.pagination.page).toBe(2);
       expect(res.body.pagination.limit).toBe(2);
+      // Validate data matches service response
+      expect(res.body.data.length).toBe(expectedData.brands.length);
     });
   });
 
   describe("GET /api/brands/:id", () => {
     it("should return specific brand", async () => {
+      // Get expected data from service
+      const expectedBrand = await getBrandByIdService(1);
+
       const res = await request(app).get("/api/brands/1").expect(200);
 
       expect(res.body.status).toBe("success");
       expect(res.body.data).toHaveProperty("id", 1);
-      expect(res.body.data).toHaveProperty("name");
+      expect(res.body.data).toHaveProperty("name", expectedBrand?.name);
       expect(res.body.data).toHaveProperty("isActive", true);
+
+      // Validate all properties match service response
+      if (expectedBrand) {
+        expect(res.body.data.name).toBe(expectedBrand.name);
+        expect(res.body.data.description).toBe(expectedBrand.description);
+        expect(res.body.data.company).toBe(expectedBrand.company);
+      }
     });
 
     it("should return 404 for non-existent brand", async () => {
-      const res = await request(app).get("/api/brands/999").expect(404);
+      // Verify brand doesn't exist using service
+      const exists = await brandExists(999);
+      expect(exists).toBe(false);
 
+      const res = await request(app).get("/api/brands/999").expect(404);
       expect(res.body.error).toBe("Brand not found");
     });
 
