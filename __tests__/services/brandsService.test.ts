@@ -1,13 +1,11 @@
 import {
-  transformBrandData,
-  transformBrandsData,
   calculatePagination,
   getAllActiveBrands,
   getBrandById,
   brandExists,
 } from "../../services/brands";
-import { BrandData } from "../../services/brands/types";
-import { Brand, initializeTestDatabase } from "../../models";
+import { initializeTestDatabase } from "../../models";
+import { BRAND_STATUS } from "../../models/Brand";
 
 // Set test environment
 process.env.NODE_ENV = "test";
@@ -19,103 +17,6 @@ describe("Brands Service", () => {
   });
 
   describe("Pure Functions", () => {
-    describe("transformBrandData", () => {
-      it("should transform brand data with active status", () => {
-        const brandData: BrandData = {
-          id: 1,
-          name: "Test Brand",
-          description: "Test Description",
-          logo: "test-logo.png",
-          status: 1,
-          country: "Singapore",
-          phoneNumber: "+65 1234 5678",
-          company: "Test Company",
-          products: 5,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-
-        const result = transformBrandData(brandData);
-
-        expect(result).toEqual({
-          id: 1,
-          name: "Test Brand",
-          description: "Test Description",
-          logo: "test-logo.png",
-          country: "Singapore",
-          phoneNumber: "+65 1234 5678",
-          company: "Test Company",
-          products: 5,
-          isActive: true,
-          createdAt: brandData.createdAt,
-          updatedAt: brandData.updatedAt,
-        });
-        expect(result).not.toHaveProperty("status");
-      });
-
-      it("should transform brand data with inactive status", () => {
-        const brandData: BrandData = {
-          id: 2,
-          name: "Inactive Brand",
-          description: "Inactive Description",
-          logo: "inactive-logo.png",
-          status: 0,
-          country: "Malaysia",
-          phoneNumber: "+60 1234 5678",
-          company: "Inactive Company",
-          products: 0,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-
-        const result = transformBrandData(brandData);
-
-        expect(result.isActive).toBe(false);
-        expect(result.name).toBe("Inactive Brand");
-        expect(result).not.toHaveProperty("status");
-      });
-    });
-
-    describe("transformBrandsData", () => {
-      it("should transform multiple brands data", () => {
-        const brandsData: BrandData[] = [
-          {
-            id: 1,
-            name: "Brand 1",
-            description: "Description 1",
-            logo: "logo1.png",
-            status: 1,
-            country: "Singapore",
-            phoneNumber: "+65 1234 5678",
-            company: "Company 1",
-            products: 3,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-          {
-            id: 2,
-            name: "Brand 2",
-            description: "Description 2",
-            logo: "logo2.png",
-            status: 0,
-            country: "Malaysia",
-            phoneNumber: "+60 1234 5678",
-            company: "Company 2",
-            products: 0,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-        ];
-
-        const result = transformBrandsData(brandsData);
-
-        expect(result).toHaveLength(2);
-        expect(result[0].isActive).toBe(true);
-        expect(result[1].isActive).toBe(false);
-        expect(result[0]).not.toHaveProperty("status");
-        expect(result[1]).not.toHaveProperty("status");
-      });
-    });
 
     describe("calculatePagination", () => {
       it("should calculate pagination correctly", () => {
@@ -162,8 +63,8 @@ describe("Brands Service", () => {
 
         // Check that all returned brands are active
         result.brands.forEach((brand) => {
-          expect(brand.isActive).toBe(true);
-          expect(brand).not.toHaveProperty("status");
+          expect(brand.status).toBe(BRAND_STATUS.ACTIVE);
+          expect(brand).not.toHaveProperty("isActive");
         });
       });
 
@@ -187,8 +88,7 @@ describe("Brands Service", () => {
 
         expect(brand).toBeTruthy();
         expect(brand?.id).toBe(1);
-        expect(brand?.isActive).toBe(true);
-        expect(brand).not.toHaveProperty("status");
+        expect(brand?.status).toBe(BRAND_STATUS.ACTIVE);
       });
 
       it("should return null for non-existent brand", async () => {

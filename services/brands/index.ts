@@ -11,6 +11,4 @@ export {
   getBrandById,
   findAndValidateBrand,
   brandExists,
-  transformBrandData,
-  transformBrandsData,
 } from "./brandsService";

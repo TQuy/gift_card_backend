@@ -1,23 +1,5 @@
 import { Brand } from "@/models";
-import { PaginationOptions, BrandData, TransformedBrand, BrandsResult } from "./types";
-
-/**
- * Transform a single brand by adding isActive field based on status
- */
-export function transformBrandData(brandData: BrandData): TransformedBrand {
-  const { status, ...rest } = brandData;
-  return {
-    ...rest,
-    isActive: status === 1,
-  };
-}
-
-/**
- * Transform multiple brands data
- */
-export function transformBrandsData(brands: BrandData[]): TransformedBrand[] {
-  return brands.map(transformBrandData);
-}
+import { PaginationOptions, BrandData, BrandsResult } from "./types";
 
 /**
  * Calculate pagination metadata
@@ -51,14 +33,11 @@ export async function getAllActiveBrands(
   // Transform raw data to plain objects
   const brandsData: BrandData[] = rows.map((brand: any) => brand.toJSON());
 
-  // Transform brands to include isActive field
-  const transformedBrands = transformBrandsData(brandsData);
-
   // Calculate pagination metadata
   const { totalPages } = calculatePagination(count, page, limit);
 
   return {
-    brands: transformedBrands,
+    brands: brandsData,
     pagination: {
       page,
       limit,
@@ -72,7 +51,7 @@ export async function getAllActiveBrands(
  * Get a specific brand by ID
  * Pure function that returns transformed brand or null
  */
-export async function getBrandById(brandId: number): Promise<TransformedBrand | null> {
+export async function getBrandById(brandId: number): Promise<BrandData | null> {
   const brand = await Brand.findOne({
     where: {
       id: brandId,
@@ -85,7 +64,7 @@ export async function getBrandById(brandId: number): Promise<TransformedBrand | 
   }
 
   const brandData: BrandData = (brand as any).toJSON();
-  return transformBrandData(brandData);
+  return brandData;
 }
 
 /**

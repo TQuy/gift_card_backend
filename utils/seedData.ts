@@ -1,9 +1,10 @@
+import { BRAND_STATUS } from "@/models/Brand";
+
 function getRandomProducts(): number {
   return Math.floor(Math.random() * 500) + 1;
 }
 
 // Import USER_ROLES constant
-const BRAND_STATUS = { active: 1, inactive: 0 } as const;
 const USER_ROLES = { ADMIN: 1, USER: 2 } as const;
 
 interface BrandData {
@@ -48,7 +49,7 @@ const sampleBrands: BrandData[] = [
     name: "Grab",
     description: "Southeast Asian super app",
     logo: "https://upload.wikimedia.org/wikipedia/en/1/12/Grab_%28application%29_logo.svg",
-    status: BRAND_STATUS.active,
+    status: BRAND_STATUS.ACTIVE,
     country: "Singapore",
     phoneNumber: "+65 6234 5678",
     company: "Grab Holdings Inc.",
@@ -58,7 +59,7 @@ const sampleBrands: BrandData[] = [
     name: "Amazon",
     description: "Global e-commerce and cloud computing",
     logo: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg",
-    status: BRAND_STATUS.active,
+    status: BRAND_STATUS.ACTIVE,
     country: "Global",
     phoneNumber: "+1 206 266 1000",
     company: "Amazon.com, Inc.",
@@ -68,7 +69,7 @@ const sampleBrands: BrandData[] = [
     name: "Esprit",
     description: "Fashion and lifestyle brand",
     logo: "https://upload.wikimedia.org/wikipedia/commons/4/49/Esprit.svg",
-    status: BRAND_STATUS.active,
+    status: BRAND_STATUS.ACTIVE,
     country: "Germany",
     phoneNumber: "+49 211 3006 0",
     company: "Esprit Holdings Limited",
@@ -78,7 +79,7 @@ const sampleBrands: BrandData[] = [
     name: "Subway",
     description: "Fast food restaurant chain",
     logo: "https://upload.wikimedia.org/wikipedia/commons/5/5c/Subway_2016_logo.svg",
-    status: BRAND_STATUS.active,
+    status: BRAND_STATUS.ACTIVE,
     country: "Global",
     phoneNumber: "+1 203 877 4281",
     company: "Subway Restaurants",
@@ -88,7 +89,7 @@ const sampleBrands: BrandData[] = [
     name: "Lazada",
     description: "Online shopping platform",
     logo: "https://upload.wikimedia.org/wikipedia/commons/4/4d/Lazada_%282019%29.svg",
-    status: BRAND_STATUS.active,
+    status: BRAND_STATUS.ACTIVE,
     country: "Singapore",
     phoneNumber: "+65 6123 4567",
     company: "Lazada Singapore Pte Ltd",
@@ -98,7 +99,7 @@ const sampleBrands: BrandData[] = [
     name: "Kaspersky",
     description: "Cybersecurity and antivirus provider",
     logo: "https://upload.wikimedia.org/wikipedia/commons/2/25/Kaspersky_logo.svg",
-    status: BRAND_STATUS.active,
+    status: BRAND_STATUS.ACTIVE,
     country: "Global",
     phoneNumber: "+7 495 797 8700",
     company: "Kaspersky Lab",
@@ -108,7 +109,7 @@ const sampleBrands: BrandData[] = [
     name: "Netflix",
     description: "Streaming entertainment service",
     logo: "https://logos-world.net/wp-content/uploads/2020/04/Netflix-Logo.png",
-    status: BRAND_STATUS.active,
+    status: BRAND_STATUS.ACTIVE,
     country: "Global",
     phoneNumber: "+1 866 579 7172",
     company: "Netflix, Inc.",
@@ -118,7 +119,7 @@ const sampleBrands: BrandData[] = [
     name: "Spotify",
     description: "Music streaming platform",
     logo: "https://upload.wikimedia.org/wikipedia/commons/8/84/Spotify_icon.svg",
-    status: BRAND_STATUS.active,
+    status: BRAND_STATUS.ACTIVE,
     country: "Global",
     phoneNumber: "+46 8 510 520 00",
     company: "Spotify AB",
@@ -128,7 +129,7 @@ const sampleBrands: BrandData[] = [
     name: "Netflix 2",
     description: "Streaming entertainment service",
     logo: "https://logos-world.net/wp-content/uploads/2020/04/Netflix-Logo.png",
-    status: BRAND_STATUS.active,
+    status: BRAND_STATUS.ACTIVE,
     country: "Global",
     phoneNumber: "+1 866 579 7172",
     company: "Netflix, Inc.",
@@ -138,7 +139,7 @@ const sampleBrands: BrandData[] = [
     name: "Spotify 2",
     description: "Music streaming platform",
     logo: "https://upload.wikimedia.org/wikipedia/commons/8/84/Spotify_icon.svg",
-    status: BRAND_STATUS.active,
+    status: BRAND_STATUS.ACTIVE,
     country: "Global",
     phoneNumber: "+46 8 510 520 00",
     company: "Spotify AB",
@@ -191,9 +192,8 @@ function generateSampleGiftCards(brands: BrandData[]): GiftCardData[] {
         recipientEmail: `recipient${Math.floor(
           Math.random() * 1000
         )}@example.com`,
-        recipientPhone: `+1${
-          Math.floor(Math.random() * 9000000000) + 1000000000
-        }`,
+        recipientPhone: `+1${Math.floor(Math.random() * 9000000000) + 1000000000
+          }`,
         message: [
           "Happy Birthday!",
           "Congratulations!",
@@ -265,17 +265,17 @@ async function seedGiftCards(GiftCard: any, options: SeedOptions = {}): Promise<
  */
 async function seedUsers(User: any, options: SeedOptions = {}): Promise<any[]> {
   const { force = false, ignoreDuplicates = true } = options;
-  
+
   if (force) {
     await User.destroy({ where: {} });
   }
-  
+
   const createdUsers = await User.bulkCreate(sampleUsers, {
     ignoreDuplicates,
     returning: true,
     individualHooks: true, // Important: enables password hashing hooks
   });
-  
+
   return createdUsers;
 }
 

@@ -91,9 +91,10 @@ router.get("/", optionalAuth, getAllBrands);
  *                     logo:
  *                       type: string
  *                       example: "lazada-logo.png"
- *                     isActive:
- *                       type: boolean
- *                       example: true
+ *                     status:
+ *                       type: number
+ *                       enum: [0, 1]
+ *                       example: 1 
  *                     country:
  *                       type: string
  *                       example: "Singapore"

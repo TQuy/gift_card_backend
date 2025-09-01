@@ -6,6 +6,7 @@ import {
   getBrandById as getBrandByIdService,
   brandExists
 } from "../services/brands";
+import { BRAND_STATUS } from "../models/Brand";
 
 // Set test environment
 process.env.NODE_ENV = "test";
@@ -49,14 +50,14 @@ describe("Gift Card API", () => {
       expect(res.body.data.length).toBe(expectedData.brands.length);
       expect(res.body.pagination.total).toBe(expectedData.pagination.total);
 
-      // Check that each brand has the required fields including isActive
+      // Check that each brand has the required fields including status
       res.body.data.forEach((brand: any, index: number) => {
         const expectedBrand = expectedData.brands[index];
         expect(brand).toHaveProperty("id", expectedBrand.id);
         expect(brand).toHaveProperty("name", expectedBrand.name);
         expect(brand).toHaveProperty("description");
         expect(brand).toHaveProperty("logo");
-        expect(brand).toHaveProperty("isActive", true); // Since we only return active brands
+        expect(brand).toHaveProperty("status", BRAND_STATUS.ACTIVE); // Since we only return active brands
         expect(brand).toHaveProperty("country");
         expect(brand).toHaveProperty("phoneNumber");
         expect(brand).toHaveProperty("company");
@@ -114,7 +115,7 @@ describe("Gift Card API", () => {
       expect(res.body.status).toBe("success");
       expect(res.body.data).toHaveProperty("id", 1);
       expect(res.body.data).toHaveProperty("name", expectedBrand?.name);
-      expect(res.body.data).toHaveProperty("isActive", true);
+      expect(res.body.data).toHaveProperty("status", BRAND_STATUS.ACTIVE);
 
       // Validate all properties match service response
       if (expectedBrand) {

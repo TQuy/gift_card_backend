@@ -1,6 +1,6 @@
 import { Sequelize, DataTypes } from "sequelize";
 
-const BRAND_STATUS = { active: 1, inactive: 0 } as const;
+export const BRAND_STATUS = { ACTIVE: 1, INACTIVE: 0 } as const;
 
 export default (sequelize: Sequelize, DataTypes: typeof import("sequelize").DataTypes): any => {
   const Brand = sequelize.define(

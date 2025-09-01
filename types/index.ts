@@ -2,7 +2,7 @@
  * TypeScript type definitions for the Gift Card API
  */
 
-import { Request } from 'express';
+import { BRAND_STATUS } from "@/models/Brand";
 
 // User interface (matching our Sequelize User model)
 export interface User {
@@ -110,7 +110,7 @@ export interface BrandResponse {
   name: string;
   description?: string;
   logo?: string;
-  isActive: boolean;
+  status: typeof BRAND_STATUS[keyof typeof BRAND_STATUS];
   country?: string;
   phoneNumber?: string;
   company?: string;

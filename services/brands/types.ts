@@ -29,11 +29,7 @@ export interface BrandData {
   updatedAt: Date;
 }
 
-export interface TransformedBrand extends Omit<BrandData, 'status'> {
-  isActive: boolean;
-}
-
 export interface BrandsResult {
-  brands: TransformedBrand[];
+  brands: BrandData[];
   pagination: PaginationResult;
 }
