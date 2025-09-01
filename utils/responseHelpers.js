@@ -12,13 +12,13 @@ function successResponse(data, message = null) {
   const response = {
     status: "success",
     data: data,
-  };
-
-  if (message) {
-    response.message = message;
   }
 
-  return response;
+  if (message) {
+    response.message = message
+  }
+
+  return response
 }
 
 /**
@@ -29,7 +29,7 @@ function successResponse(data, message = null) {
  * @returns {object} - Paginated success response object
  */
 function paginatedResponse(data, paginationInfo, additionalData = {}) {
-  const { page, limit, total, totalPages } = paginationInfo;
+  const { page, limit, total, totalPages } = paginationInfo
 
   return {
     status: "success",
@@ -43,7 +43,7 @@ function paginatedResponse(data, paginationInfo, additionalData = {}) {
       hasPrev: page > 1,
     },
     ...additionalData,
-  };
+  }
 }
 
 /**
@@ -55,7 +55,7 @@ function paginatedResponse(data, paginationInfo, additionalData = {}) {
 function errorResponse(message, statusCode = null) {
   return {
     error: message,
-  };
+  }
 }
 
 /**
@@ -65,19 +65,19 @@ function errorResponse(message, statusCode = null) {
  */
 function validationErrorResponse(errors) {
   if (Array.isArray(errors) && errors.length === 1) {
-    return errorResponse(errors[0]);
+    return errorResponse(errors[0])
   }
 
   // For consistency with existing tests, if there are multiple validation errors,
   // return the first one as the main error message (maintains backward compatibility)
   if (Array.isArray(errors) && errors.length > 0) {
-    return errorResponse(errors[0]);
+    return errorResponse(errors[0])
   }
 
   return {
     error: "Validation failed",
     details: errors,
-  };
+  }
 }
 
 /**
@@ -97,26 +97,26 @@ function buildGiftCardResponse(giftCard) {
     deliveryType: giftCard.deliveryType,
     deliveryTime: giftCard.deliveryTime,
     issuedAt: giftCard.issuedAt,
-  };
+  }
 
   // Only include optional fields if they exist in the giftCard object
   if (giftCard.senderName) {
-    responseData.senderName = giftCard.senderName;
+    responseData.senderName = giftCard.senderName
   }
 
   if (giftCard.recipientName) {
-    responseData.recipientName = giftCard.recipientName;
+    responseData.recipientName = giftCard.recipientName
   }
 
   if (giftCard.deliveryDate) {
-    responseData.deliveryDate = giftCard.deliveryDate;
+    responseData.deliveryDate = giftCard.deliveryDate
   }
 
   if (giftCard.period) {
-    responseData.period = giftCard.period;
+    responseData.period = giftCard.period
   }
 
-  return responseData;
+  return responseData
 }
 
 module.exports = {
@@ -125,4 +125,4 @@ module.exports = {
   errorResponse,
   validationErrorResponse,
   buildGiftCardResponse,
-};
+}

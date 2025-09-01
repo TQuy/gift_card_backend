@@ -1,9 +1,10 @@
-const express = require("express");
-const router = express.Router();
+const express = require("express")
+const router = express.Router()
 const {
   issueGiftCard,
   getIssuedGiftCards,
-} = require("../controllers/giftCardsController");
+} = require("../controllers/giftCardsController")
+const { authenticateToken, requireRole } = require("../middleware/auth")
 
 /**
  * @swagger
@@ -11,6 +12,8 @@ const {
  *   post:
  *     summary: Issue a gift card for a specific brand
  *     tags: [Gift Cards]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -96,6 +99,18 @@ const {
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Unauthorized - Authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: Forbidden - Admin role required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  *       404:
  *         description: Brand not found
  *         content:
@@ -109,7 +124,12 @@ const {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post("/:id/issues", issueGiftCard);
+router.post(
+  "/:id/issues",
+  authenticateToken,
+  requireRole("admin"),
+  issueGiftCard
+)
 
 /**
  * @swagger
@@ -117,6 +137,8 @@ router.post("/:id/issues", issueGiftCard);
  *   get:
  *     summary: List issued gift cards for a specific brand
  *     tags: [Gift Cards]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -166,6 +188,12 @@ router.post("/:id/issues", issueGiftCard);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Unauthorized - Authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  *       404:
  *         description: Brand not found
  *         content:
@@ -179,6 +207,6 @@ router.post("/:id/issues", issueGiftCard);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get("/:id/issues", getIssuedGiftCards);
+router.get("/:id/issues", authenticateToken, getIssuedGiftCards)
 
-module.exports = router;
+module.exports = router

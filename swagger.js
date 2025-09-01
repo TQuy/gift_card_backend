@@ -25,6 +25,15 @@ const options = {
       },
     ],
     components: {
+      securitySchemes: {
+        BearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+          description:
+            "JWT token for authentication. Include 'Bearer ' prefix with your token.",
+        },
+      },
       schemas: {
         Brand: {
           type: "object",
@@ -187,6 +196,40 @@ const options = {
               type: "boolean",
               description: "Whether there is a previous page",
               example: false,
+            },
+          },
+        },
+        User: {
+          type: "object",
+          required: ["id", "username", "email", "role"],
+          properties: {
+            id: {
+              type: "string",
+              format: "uuid",
+              description: "User ID",
+              example: "123e4567-e89b-12d3-a456-426614174000",
+            },
+            username: {
+              type: "string",
+              description: "Username",
+              example: "admin",
+            },
+            email: {
+              type: "string",
+              format: "email",
+              description: "User email address",
+              example: "admin@example.com",
+            },
+            role: {
+              type: "string",
+              enum: ["admin", "user"],
+              description: "User role",
+              example: "admin",
+            },
+            createdAt: {
+              type: "string",
+              format: "date-time",
+              description: "User creation timestamp",
             },
           },
         },
