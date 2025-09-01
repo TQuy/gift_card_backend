@@ -1,11 +1,14 @@
-const express = require("express");
-const cors = require("cors");
-const helmet = require("helmet");
-const morgan = require("morgan");
-const cookieParser = require("cookie-parser");
-const { initializeDatabase } = require("./models");
-const { specs, swaggerUi } = require("./swagger");
-require("dotenv").config();
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import morgan from "morgan";
+import cookieParser from "cookie-parser";
+import { initializeDatabase } from "@/models";
+import { specs, swaggerUi } from "./swagger";
+import router from "@/routes";
+import { config } from "dotenv";
+
+config();
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -19,7 +22,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use("/api", require("./routes/index"));
+app.use("/api", router);
 
 // Swagger API Documentation
 app.use(
@@ -38,20 +41,20 @@ app.get("/api/health", (req, res) => {
 });
 
 // 404 handler for unmatched routes
-app.use((req, res) => {
+app.use((req: express.Request, res: express.Response) => {
   res.status(404).json({ error: "Route not found" });
 });
 
 // Error handler
-app.use((err, req, res, next) => {
+app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err.stack);
   res.status(500).json({ error: "Something went wrong!" });
 });
 
-let server;
+let server: any;
 
 // Initialize database and start server
-const startServer = async () => {
+const startServer = async (): Promise<void> => {
   try {
     await initializeDatabase();
     console.log('Database initialized successfully');
@@ -71,4 +74,4 @@ const startServer = async () => {
 // Start the server
 startServer();
 
-module.exports = { app, server };
+export { app, server };

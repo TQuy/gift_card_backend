@@ -4,6 +4,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Build output
+dist/
+
 # Database files
 *.db
 *.sqlite
@@ -72,6 +75,7 @@ typings/
 
 # IDE files
 .vscode/
+.github/
 .idea/
 *.swp
 *.swo

@@ -1,10 +1,11 @@
-const express = require("express")
-const router = express.Router()
-const {
+import express from "express";
+import {
   issueGiftCard,
   getIssuedGiftCards,
-} = require("../controllers/giftCardsController")
-const { authenticateToken, requireRole } = require("../middleware/auth")
+} from "@/controllers/giftCardsController";
+import { optionalAuth } from "@/middleware/auth";
+
+const router = express.Router();
 
 /**
  * @swagger
@@ -126,10 +127,9 @@ const { authenticateToken, requireRole } = require("../middleware/auth")
  */
 router.post(
   "/:id/issues",
-  authenticateToken,
-  requireRole("admin"),
+  optionalAuth,
   issueGiftCard
-)
+);
 
 /**
  * @swagger
@@ -207,6 +207,6 @@ router.post(
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get("/:id/issues", authenticateToken, getIssuedGiftCards)
+router.get("/:id/issues", optionalAuth, getIssuedGiftCards);
 
-module.exports = router
+export default router;

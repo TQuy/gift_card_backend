@@ -2,12 +2,27 @@
  * Validation utilities for request parameters and data
  */
 
+interface BrandIdValidationResult {
+  isValid: boolean;
+  brandId?: number;
+  error?: string;
+}
+
+interface GiftCardValidationResult {
+  isValid: boolean;
+  errors?: string[];
+}
+
+interface PaginationResult {
+  page: number;
+  limit: number;
+  offset: number;
+}
+
 /**
  * Validate and parse brand ID from request parameters
- * @param {string} id - The brand ID from request params
- * @returns {object} - {isValid: boolean, brandId?: number, error?: string}
  */
-function validateBrandId(id) {
+export function validateBrandId(id: string): BrandIdValidationResult {
   const brandId = parseInt(id);
 
   if (isNaN(brandId)) {
@@ -25,11 +40,9 @@ function validateBrandId(id) {
 
 /**
  * Validate gift card issue request data
- * @param {object} data - The request body data
- * @returns {object} - {isValid: boolean, errors?: string[]}
  */
-function validateGiftCardIssueData(data) {
-  const errors = [];
+export function validateGiftCardIssueData(data: any): GiftCardValidationResult {
+  const errors: string[] = [];
   const {
     amount,
     recipientEmail,
@@ -94,19 +107,11 @@ function validateGiftCardIssueData(data) {
 
 /**
  * Validate pagination parameters
- * @param {object} query - The query parameters
- * @returns {object} - {page: number, limit: number, offset: number}
  */
-function validatePagination(query) {
+export function validatePagination(query: any): PaginationResult {
   const page = parseInt(query.page) || 1;
   const limit = parseInt(query.limit) || 10;
   const offset = (page - 1) * limit;
 
   return { page, limit, offset };
 }
-
-module.exports = {
-  validateBrandId,
-  validateGiftCardIssueData,
-  validatePagination,
-};

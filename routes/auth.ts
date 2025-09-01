@@ -1,11 +1,11 @@
-const express = require("express");
-const {
+import express from "express";
+import {
   register,
   login,
   logout,
   me,
-} = require("../controllers/authController");
-const { authenticateToken } = require("../middleware/auth");
+} from "@/controllers/authController";
+import { authenticateToken } from "@/middleware/auth";
 
 const router = express.Router();
 
@@ -199,4 +199,4 @@ router.post("/logout", logout);
  */
 router.get("/me", authenticateToken, me);
 
-module.exports = router;
+export default router;

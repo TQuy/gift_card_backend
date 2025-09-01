@@ -1,20 +1,34 @@
-const request = require("supertest");
-const { app } = require("../server");
-const { Brand, GiftCard, initializeTestDatabase } = require("../models");
+import request from "supertest";
+import { app } from "../server";
+import { Brand, GiftCard, initializeTestDatabase } from "../models";
+import jwt from "jsonwebtoken";
+import { JWT_SECRET } from "../middleware/auth";
+import { USER_ROLES, COOKIE_CONFIG } from "../config/constants";
 
 // Set test environment
 process.env.NODE_ENV = "test";
 
+// Test helper to create admin auth cookie
+function createAuthCookie(userId: number = 1, role: number = USER_ROLES.ADMIN): string {
+  const token = jwt.sign({ id: userId, role }, JWT_SECRET, { expiresIn: "1h" });
+  return `${COOKIE_CONFIG.NAME}=${token}`;
+}
+
 describe("Gift Card API", () => {
+  let authCookie: string;
+  
   // Set up test database
   beforeAll(async () => {
     await initializeTestDatabase();
+    // Create admin auth cookie for authenticated tests
+    authCookie = createAuthCookie();
   });
 
   // Clean up after each test
   afterEach(async () => {
     await GiftCard.destroy({ where: {} });
   });
+
   describe("GET /api/health", () => {
     it("should return health status", async () => {
       const res = await request(app).get("/api/health").expect(200);
@@ -46,7 +60,7 @@ describe("Gift Card API", () => {
 
       // Compare each brand in response with database
       const dbBrands = await Brand.findAll({ order: [["id", "ASC"]] });
-      res.body.data.forEach((brand, idx) => {
+      res.body.data.forEach((brand: any, idx: number) => {
         const dbBrand = dbBrands[idx];
         expect(brand).toMatchObject({
           id: dbBrand.id,
@@ -108,14 +122,16 @@ describe("Gift Card API", () => {
     it("should return specific brand", async () => {
       // Get the first brand from the database
       const brand = await Brand.findOne({ order: [["id", "ASC"]] });
-      const res = await request(app).get(`/api/brands/${brand.id}`).expect(200);
+      const res = await request(app).get(`/api/brands/${brand?.id}`).expect(200);
 
       expect(res.body.status).toBe("success");
       // Compare all fields with database
-      Object.keys(brand.dataValues).forEach((key) => {
-        if (["createdAt", "updatedAt"].includes(key)) return;
-        expect(res.body.data[key]).toEqual(brand[key]);
-      });
+      if (brand) {
+        Object.keys(brand.dataValues).forEach((key) => {
+          if (["createdAt", "updatedAt"].includes(key)) return;
+          expect(res.body.data[key]).toEqual((brand as any)[key]);
+        });
+      }
       expect(res.body.data.createdAt).toBeDefined();
       expect(res.body.data.updatedAt).toBeDefined();
     });
@@ -150,6 +166,7 @@ describe("Gift Card API", () => {
       };
 
       const res = await request(app)
+        .set("Cookie", [authCookie])
         .post("/api/brands/1/issues")
         .send(giftCardData)
         .expect(201);
@@ -175,7 +192,7 @@ describe("Gift Card API", () => {
         "deliveryDate",
         "period",
       ].forEach((key) => {
-        expect(res.body.data[key]).toEqual(issuedCard[key]);
+        expect(res.body.data[key]).toEqual((issuedCard as any)[key]);
       });
       expect(res.body.data.id).toBeDefined();
       expect(res.body.data.activationCode).toBeDefined();
@@ -193,6 +210,7 @@ describe("Gift Card API", () => {
       };
 
       const res = await request(app)
+        .set("Cookie", [authCookie])
         .post("/api/brands/1/issues")
         .send(giftCardData)
         .expect(201);
@@ -223,6 +241,7 @@ describe("Gift Card API", () => {
       };
 
       const res = await request(app)
+        .set("Cookie", [authCookie])
         .post("/api/brands/1/issues")
         .send(validData)
         .expect(201);
@@ -244,6 +263,7 @@ describe("Gift Card API", () => {
       };
 
       const res = await request(app)
+        .set("Cookie", [authCookie])
         .post("/api/brands/1/issues")
         .send(invalidData)
         .expect(400);
@@ -261,6 +281,7 @@ describe("Gift Card API", () => {
       };
 
       const res = await request(app)
+        .set("Cookie", [authCookie])
         .post("/api/brands/1/issues")
         .send(validData)
         .expect(201);
@@ -278,6 +299,7 @@ describe("Gift Card API", () => {
       };
 
       const res = await request(app)
+        .set("Cookie", [authCookie])
         .post("/api/brands/1/issues")
         .send(validData)
         .expect(201);
@@ -296,6 +318,7 @@ describe("Gift Card API", () => {
       };
 
       const res = await request(app)
+        .set("Cookie", [authCookie])
         .post("/api/brands/1/issues")
         .send(invalidData)
         .expect(400);
@@ -316,6 +339,7 @@ describe("Gift Card API", () => {
       };
 
       const res = await request(app)
+        .set("Cookie", [authCookie])
         .post("/api/brands/1/issues")
         .send(invalidData)
         .expect(400);
@@ -336,6 +360,7 @@ describe("Gift Card API", () => {
       };
 
       const res = await request(app)
+        .set("Cookie", [authCookie])
         .post("/api/brands/1/issues")
         .send(invalidData)
         .expect(400);
@@ -354,6 +379,7 @@ describe("Gift Card API", () => {
       };
 
       const res = await request(app)
+        .set("Cookie", [authCookie])
         .post("/api/brands/1/issues")
         .send(invalidData)
         .expect(400);
@@ -373,6 +399,7 @@ describe("Gift Card API", () => {
       };
 
       const res = await request(app)
+        .set("Cookie", [authCookie])
         .post("/api/brands/1/issues")
         .send(invalidData)
         .expect(400);
@@ -394,6 +421,7 @@ describe("Gift Card API", () => {
       };
 
       const res = await request(app)
+        .set("Cookie", [authCookie])
         .post("/api/brands/1/issues")
         .send(invalidData)
         .expect(400);
@@ -415,6 +443,7 @@ describe("Gift Card API", () => {
       };
 
       const res = await request(app)
+        .set("Cookie", [authCookie])
         .post("/api/brands/1/issues")
         .send(invalidData)
         .expect(400);
@@ -438,6 +467,7 @@ describe("Gift Card API", () => {
       };
 
       const res = await request(app)
+        .set("Cookie", [authCookie])
         .post("/api/brands/1/issues")
         .send(invalidData)
         .expect(400);
@@ -459,6 +489,7 @@ describe("Gift Card API", () => {
       };
 
       const res = await request(app)
+        .set("Cookie", [authCookie])
         .post("/api/brands/999/issues")
         .send(giftCardData)
         .expect(404);
@@ -478,6 +509,7 @@ describe("Gift Card API", () => {
       };
 
       const res = await request(app)
+        .set("Cookie", [authCookie])
         .post("/api/brands/invalid/issues")
         .send(giftCardData)
         .expect(400);
@@ -489,7 +521,8 @@ describe("Gift Card API", () => {
   describe("GET /api/brands/:id/issues", () => {
     beforeEach(async () => {
       // Issue a gift card for testing
-      await request(app).post("/api/brands/1/issues").send({
+      await request(app).set("Cookie", [authCookie])
+        .post("/api/brands/1/issues").send({
         amount: 50,
         recipientEmail: "test@example.com",
         recipientPhone: "+6512345678",
@@ -509,14 +542,14 @@ describe("Gift Card API", () => {
       // Compare brand info with database
       const brand = await Brand.findByPk(res.body.brand.id);
       expect(res.body.brand).toMatchObject({
-        id: brand.id,
-        name: brand.name,
+        id: brand?.id,
+        name: brand?.name,
       });
       // Compare issued card fields with database
       const dbGiftCards = await GiftCard.findAll({
-        where: { brandId: brand.id },
+        where: { brandId: brand?.id },
       });
-      res.body.data.forEach((card, idx) => {
+      res.body.data.forEach((card: any, idx: number) => {
         const dbCard = dbGiftCards[idx];
         expect(card.brandId).toEqual(dbCard.brandId);
         expect(card.brandName).toEqual(dbCard.brandName);

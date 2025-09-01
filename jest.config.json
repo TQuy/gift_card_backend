@@ -1,11 +1,14 @@
 {
+  "preset": "ts-jest",
   "testEnvironment": "node",
-  "collectCoverageFrom": [
-    "**/*.js",
-    "!node_modules/**",
-    "!coverage/**",
-    "!__tests__/**"
-  ],
-  "testMatch": ["**/__tests__/**/*.js", "**/?(*.)+(spec|test).js"],
-  "verbose": true
+  "moduleNameMapper": {
+    "^@/(.*)$": "<rootDir>/$1",
+    "^@/controllers/(.*)$": "<rootDir>/controllers/$1",
+    "^@/models/(.*)$": "<rootDir>/models/$1",
+    "^@/routes/(.*)$": "<rootDir>/routes/$1",
+    "^@/middleware/(.*)$": "<rootDir>/middleware/$1",
+    "^@/utils/(.*)$": "<rootDir>/utils/$1",
+    "^@/config/(.*)$": "<rootDir>/config/$1",
+    "^@/types/(.*)$": "<rootDir>/types/$1"
+  }
 }

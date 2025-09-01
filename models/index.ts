@@ -1,6 +1,6 @@
-const { Sequelize } = require("sequelize");
-const path = require("path");
-const { seedDatabase } = require("../utils/seedData");
+import { Sequelize, DataTypes } from "sequelize";
+import path from "path";
+import { seedDatabase } from "@/utils/seedData";
 
 // Database configuration
 const isTest = process.env.NODE_ENV === "test";
@@ -15,16 +15,20 @@ const sequelize = new Sequelize({
 });
 
 // Import models
-const Brand = require("./Brand")(sequelize, Sequelize.DataTypes);
-const GiftCard = require("./GiftCard")(sequelize, Sequelize.DataTypes);
-const User = require("./User")(sequelize, Sequelize.DataTypes);
+import BrandModel from "./Brand";
+import GiftCardModel from "./GiftCard";
+import UserModel from "./User";
+
+const Brand = BrandModel(sequelize, DataTypes);
+const GiftCard = GiftCardModel(sequelize, DataTypes);
+const User = UserModel(sequelize, DataTypes);
 
 // Define associations
 Brand.hasMany(GiftCard, { foreignKey: "brandId", as: "giftCards" });
 GiftCard.belongsTo(Brand, { foreignKey: "brandId", as: "brand" });
 
 // Sync database tables only
-const initializeDatabase = async () => {
+const initializeDatabase = async (): Promise<void> => {
   try {
     await sequelize.sync({ force: isTest }); // Force sync in tests to reset data
     console.log("Database tables synchronized successfully");
@@ -35,7 +39,7 @@ const initializeDatabase = async () => {
 };
 
 // Initialize database and seed data for tests
-const initializeTestDatabase = async () => {
+const initializeTestDatabase = async (): Promise<void> => {
   try {
     await initializeDatabase();
     await seedDatabase({ Brand, GiftCard, User }, { force: true });
@@ -46,7 +50,7 @@ const initializeTestDatabase = async () => {
   }
 };
 
-module.exports = {
+export {
   sequelize,
   Brand,
   GiftCard,

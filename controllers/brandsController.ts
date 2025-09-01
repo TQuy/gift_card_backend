@@ -1,27 +1,37 @@
-const { Brand } = require("../models");
-const { validateBrandId, validatePagination } = require("../utils/validation");
-const {
+import { Request, Response } from "express";
+import { Brand } from "@/models";
+import { validateBrandId, validatePagination } from "@/utils/validation";
+import {
   successResponse,
   paginatedResponse,
   errorResponse,
-} = require("../utils/responseHelpers");
+} from "@/utils/responseHelpers";
 
 /**
  * Get all active brands with pagination
  */
-async function getAllBrands(req, res) {
+export async function getAllBrands(req: Request, res: Response): Promise<void> {
   try {
     const { page, limit, offset } = validatePagination(req.query);
 
     const { count, rows } = await Brand.findAndCountAll({
-      where: { isActive: true },
+      where: { status: 1 }, // Use status instead of isActive
       limit: limit,
       offset: offset,
       order: [["createdAt", "ASC"]],
     });
 
+    // Transform brands to include isActive field
+    const transformedRows = rows.map((brand: any) => {
+      const brandData = brand.toJSON();
+      return {
+        ...brandData,
+        isActive: brandData.status === 1,
+      };
+    });
+
     const totalPages = Math.ceil(count / limit);
-    const response = paginatedResponse(rows, {
+    const response = paginatedResponse(transformedRows, {
       page,
       limit,
       total: count,
@@ -38,18 +48,18 @@ async function getAllBrands(req, res) {
 /**
  * Get a specific brand by ID
  */
-async function getBrandById(req, res) {
+export async function getBrandById(req: Request, res: Response): Promise<Response | void> {
   try {
     const validation = validateBrandId(req.params.id);
 
     if (!validation.isValid) {
-      return res.status(400).json(errorResponse(validation.error));
+      return res.status(400).json(errorResponse(validation.error!));
     }
 
     const brand = await Brand.findOne({
       where: {
         id: validation.brandId,
-        isActive: true,
+        status: 1, // Use status instead of isActive
       },
     });
 
@@ -57,7 +67,14 @@ async function getBrandById(req, res) {
       return res.status(404).json(errorResponse("Brand not found"));
     }
 
-    res.json(successResponse(brand));
+    // Transform brand to include isActive field
+    const brandData = (brand as any).toJSON();
+    const transformedBrand = {
+      ...brandData,
+      isActive: brandData.status === 1,
+    };
+
+    res.json(successResponse(transformedBrand));
   } catch (error) {
     console.error("Error fetching brand:", error);
     res.status(500).json(errorResponse("Failed to fetch brand"));
@@ -67,19 +84,13 @@ async function getBrandById(req, res) {
 /**
  * Helper function to find and validate brand for gift card operations
  */
-async function findAndValidateBrand(brandId) {
+export async function findAndValidateBrand(brandId: number): Promise<any> {
   const brand = await Brand.findOne({
     where: {
       id: brandId,
-      isActive: true,
+      status: 1, // Use status instead of isActive
     },
   });
 
   return brand;
 }
-
-module.exports = {
-  getAllBrands,
-  getBrandById,
-  findAndValidateBrand,
-};

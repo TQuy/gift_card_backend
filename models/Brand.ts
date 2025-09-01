@@ -1,6 +1,8 @@
-const BRAND_STATUS = { active: 1, inactive: 0 };
+import { Sequelize, DataTypes } from "sequelize";
 
-module.exports = (sequelize, DataTypes) => {
+const BRAND_STATUS = { active: 1, inactive: 0 } as const;
+
+export default (sequelize: Sequelize, DataTypes: typeof import("sequelize").DataTypes): any => {
   const Brand = sequelize.define(
     "Brand",
     {
@@ -58,6 +60,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  Brand.BRAND_STATUS = BRAND_STATUS;
+  (Brand as any).BRAND_STATUS = BRAND_STATUS;
   return Brand;
 };

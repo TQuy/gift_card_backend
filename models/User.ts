@@ -1,8 +1,21 @@
-const bcrypt = require("bcryptjs");
+import bcrypt from "bcryptjs";
+import { Sequelize, DataTypes, Model, ModelDefined } from "sequelize";
 
-const USER_ROLES = { ADMIN: 1, USER: 2 };
+const USER_ROLES = { ADMIN: 1, USER: 2 } as const;
 
-module.exports = (sequelize, DataTypes) => {
+interface UserAttributes {
+  id: number;
+  username: string;
+  email: string;
+  password: string;
+  role: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+interface UserCreationAttributes extends Omit<UserAttributes, 'id' | 'createdAt' | 'updatedAt'> {}
+
+export default (sequelize: Sequelize, DataTypes: typeof import("sequelize").DataTypes): any => {
   const User = sequelize.define(
     "User",
     {
@@ -30,9 +43,6 @@ module.exports = (sequelize, DataTypes) => {
       password: {
         type: DataTypes.STRING,
         allowNull: false,
-        // validate: {
-        //   len: [6, 255],
-        // },
       },
       role: {
         type: DataTypes.INTEGER,
@@ -49,12 +59,12 @@ module.exports = (sequelize, DataTypes) => {
       createdAt: "createdAt",
       updatedAt: "updatedAt",
       hooks: {
-        beforeCreate: async (user) => {
+        beforeCreate: async (user: any) => {
           if (user.password) {
             user.password = await bcrypt.hash(user.password, 12);
           }
         },
-        beforeUpdate: async (user) => {
+        beforeUpdate: async (user: any) => {
           if (user.changed("password")) {
             user.password = await bcrypt.hash(user.password, 12);
           }
@@ -64,25 +74,25 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   // Instance method to check password
-  User.prototype.comparePassword = async function (candidatePassword) {
+  (User.prototype as any).comparePassword = async function (candidatePassword: string): Promise<boolean> {
     return await bcrypt.compare(candidatePassword, this.password);
   };
 
   // Instance method to get role name
-  User.prototype.getRoleName = function () {
-    const roleNames = Object.keys(USER_ROLES);
+  (User.prototype as any).getRoleName = function (): string {
+    const roleNames = Object.keys(USER_ROLES) as Array<keyof typeof USER_ROLES>;
     return (
       roleNames.find((name) => USER_ROLES[name] === this.role) || "UNKNOWN"
     );
   };
 
   // Static method to check if user is admin
-  User.prototype.isAdmin = function () {
+  (User.prototype as any).isAdmin = function (): boolean {
     return this.role === USER_ROLES.ADMIN;
   };
 
   // Add constants to model
-  User.USER_ROLES = USER_ROLES;
+  (User as any).USER_ROLES = USER_ROLES;
 
   return User;
 };

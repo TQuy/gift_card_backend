@@ -1,12 +1,49 @@
-function getRandomProducts() {
+function getRandomProducts(): number {
   return Math.floor(Math.random() * 500) + 1;
 }
 
 // Import USER_ROLES constant
-const BRAND_STATUS = { active: 1, inactive: 0 };
-const USER_ROLES = { ADMIN: 1, USER: 2 };
+const BRAND_STATUS = { active: 1, inactive: 0 } as const;
+const USER_ROLES = { ADMIN: 1, USER: 2 } as const;
 
-const sampleBrands = [
+interface BrandData {
+  name: string;
+  description: string;
+  logo: string;
+  status: number;
+  country: string;
+  phoneNumber: string;
+  company: string;
+  products: number;
+}
+
+interface UserData {
+  username: string;
+  email: string;
+  password: string;
+  role: number;
+}
+
+interface GiftCardData {
+  brandId: number;
+  brandName: string;
+  amount: number;
+  activationCode: string;
+  senderName: string;
+  recipientName: string;
+  recipientEmail: string;
+  recipientPhone: string;
+  message: string;
+  deliveryType: string;
+  deliveryTime: string;
+  deliveryDate: string;
+  period: string;
+  status: string;
+  isUsed: boolean;
+  usedAt: Date | null;
+}
+
+const sampleBrands: BrandData[] = [
   {
     name: "Grab",
     description: "Southeast Asian super app",
@@ -110,7 +147,7 @@ const sampleBrands = [
 ];
 
 // Sample users
-const sampleUsers = [
+const sampleUsers: UserData[] = [
   {
     username: "admin",
     email: "admin@example.com",
@@ -119,12 +156,20 @@ const sampleUsers = [
   },
 ];
 
-function generateActivationCode() {
+function generateActivationCode(): string {
   return Math.random().toString(36).substring(2, 15).toUpperCase();
 }
 
-function generateSampleGiftCards(brands) {
-  const sampleCards = [];
+interface SeedOptions {
+  force?: boolean;
+  ignoreDuplicates?: boolean;
+  brandsOnly?: boolean;
+  usersOnly?: boolean;
+  count?: number;
+}
+
+function generateSampleGiftCards(brands: BrandData[]): GiftCardData[] {
+  const sampleCards: GiftCardData[] = [];
 
   brands.forEach((brand, index) => {
     // Generate 2-3 gift cards per brand
@@ -179,13 +224,8 @@ function generateSampleGiftCards(brands) {
 
 /**
  * Seed brands into the database
- * @param {Object} Brand - Sequelize Brand model
- * @param {Object} options - Seeding options
- * @param {boolean} options.force - Whether to clear existing data
- * @param {boolean} options.ignoreDuplicates - Whether to ignore duplicate entries
- * @returns {Promise<Array>} Array of created brands
  */
-async function seedBrands(Brand, options = {}) {
+async function seedBrands(Brand: any, options: SeedOptions = {}): Promise<any[]> {
   const { force = false, ignoreDuplicates = true } = options;
 
   if (force) {
@@ -202,14 +242,8 @@ async function seedBrands(Brand, options = {}) {
 
 /**
  * Seed gift cards into the database
- * @param {Object} GiftCard - Sequelize GiftCard model
- * @param {Object} options - Seeding options
- * @param {boolean} options.force - Whether to clear existing data
- * @param {boolean} options.ignoreDuplicates - Whether to ignore duplicate entries
- * @param {number} options.count - Number of cards per brand (if not using random generation)
- * @returns {Promise<Array>} Array of created gift cards
  */
-async function seedGiftCards(GiftCard, options = {}) {
+async function seedGiftCards(GiftCard: any, options: SeedOptions = {}): Promise<any[]> {
   const { force = false, ignoreDuplicates = true } = options;
 
   if (force) {
@@ -228,13 +262,8 @@ async function seedGiftCards(GiftCard, options = {}) {
 
 /**
  * Seed users into the database
- * @param {Object} User - Sequelize User model
- * @param {Object} options - Seeding options
- * @param {boolean} options.force - Whether to clear existing data
- * @param {boolean} options.ignoreDuplicates - Whether to ignore duplicate entries
- * @returns {Promise<Array>} Array of created users
  */
-async function seedUsers(User, options = {}) {
+async function seedUsers(User: any, options: SeedOptions = {}): Promise<any[]> {
   const { force = false, ignoreDuplicates = true } = options;
   
   if (force) {
@@ -250,13 +279,23 @@ async function seedUsers(User, options = {}) {
   return createdUsers;
 }
 
+interface SeedDatabaseModels {
+  Brand: any;
+  GiftCard: any;
+  User?: any;
+}
+
+interface SeedDatabaseResult {
+  brands: any[];
+  giftCards: any[];
+  users: any[];
+}
+
 /**
  * Seed both brands and gift cards
- * @param {Object} models - Object containing Brand, GiftCard, and User models
- * @param {Object} options - Seeding options
- * @returns {Promise<Object>} Object containing created brands, gift cards, and users
  */
-async function seedDatabase({ Brand, GiftCard, User }, options = {}) {
+export async function seedDatabase(models: SeedDatabaseModels, options: SeedOptions = {}): Promise<SeedDatabaseResult> {
+  const { Brand, GiftCard, User } = models;
   const {
     brandsOnly = false,
     usersOnly = false,
@@ -264,9 +303,9 @@ async function seedDatabase({ Brand, GiftCard, User }, options = {}) {
     ignoreDuplicates = true,
   } = options;
 
-  let createdBrands = [];
-  let createdGiftCards = [];
-  let createdUsers = [];
+  let createdBrands: any[] = [];
+  let createdGiftCards: any[] = [];
+  let createdUsers: any[] = [];
 
   // Seed users if User model is provided
   if (User) {
@@ -295,15 +334,13 @@ async function seedDatabase({ Brand, GiftCard, User }, options = {}) {
 
 /**
  * Check if database is empty (no brands)
- * @param {Object} Brand - Sequelize Brand model
- * @returns {Promise<boolean>} True if database is empty
  */
-async function isDatabaseEmpty(Brand) {
+async function isDatabaseEmpty(Brand: any): Promise<boolean> {
   const brandCount = await Brand.count();
   return brandCount === 0;
 }
 
-module.exports = {
+export {
   sampleBrands,
   sampleUsers,
   generateActivationCode,
@@ -311,6 +348,5 @@ module.exports = {
   seedBrands,
   seedGiftCards,
   seedUsers,
-  seedDatabase,
   isDatabaseEmpty,
 };

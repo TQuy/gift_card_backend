@@ -1,52 +1,59 @@
-const jwt = require("jsonwebtoken")
-const { Op } = require("sequelize")
-const { User } = require("../models")
-const { successResponse, errorResponse } = require("../utils/responseHelpers")
-const {
-  JWT_DEFAULTS,
-  COOKIE_CONFIG,
-  NODE_ENVIRONMENTS,
-  HTTP_STATUS,
-  MESSAGES
-} = require("../config/constants")
+import jwt, { SignOptions } from "jsonwebtoken";
+import { Op } from "sequelize";
+import { Request, Response } from "express";
+import { User } from "@/models";
+import { successResponse, errorResponse } from "@/utils/responseHelpers";
+import { 
+  JWT_DEFAULTS, 
+  COOKIE_CONFIG, 
+  NODE_ENVIRONMENTS, 
+  HTTP_STATUS 
+} from "@/config/constants";
+import { JwtPayload, UserResponse } from "@/types";
 
 // JWT secret - in production, use environment variable
-const JWT_SECRET = process.env.JWT_SECRET || JWT_DEFAULTS.SECRET
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || JWT_DEFAULTS.EXPIRES_IN
+const JWT_SECRET: string = process.env.JWT_SECRET || JWT_DEFAULTS.SECRET;
+const JWT_EXPIRES_IN: string = process.env.JWT_EXPIRES_IN || JWT_DEFAULTS.EXPIRES_IN;
 
 /**
- * Generate JWT token
+ * Generate JWT token with user information
  */
-function generateToken(userId, role) {
-  return jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN })
+function generateToken(user: any): string {
+  const payload = {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+  };
+  
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN } as SignOptions);
 }
 
 /**
  * Set JWT cookie
  */
-function setTokenCookie(res, token) {
+function setTokenCookie(res: Response, token: string): void {
   res.cookie(COOKIE_CONFIG.NAME, token, {
     httpOnly: COOKIE_CONFIG.HTTP_ONLY,
     secure: process.env.NODE_ENV === NODE_ENVIRONMENTS.PRODUCTION,
-    sameSite: COOKIE_CONFIG.SAME_SITE,
+    sameSite: COOKIE_CONFIG.SAME_SITE as "strict",
     maxAge: COOKIE_CONFIG.MAX_AGE,
-  })
+  });
 }
 
 /**
  * Register a new user
  */
-async function register(req, res) {
+export async function register(req: Request, res: Response): Promise<Response> {
   try {
     const { username, email, password, role } = req.body
 
     // Basic validation
     if (!username || !email || !password) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(errorResponse(MESSAGES.USERNAME_EMAIL_REQUIRED))
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(errorResponse("Username, email, and password are required"))
     }
 
     if (password.length < 6) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(errorResponse(MESSAGES.PASSWORD_MIN_LENGTH))
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(errorResponse("Password must be at least 6 characters long"))
     }
 
     // Check if user already exists
@@ -57,7 +64,7 @@ async function register(req, res) {
     })
 
     if (existingUser) {
-      return res.status(HTTP_STATUS.CONFLICT).json(errorResponse(MESSAGES.USERNAME_EMAIL_EXISTS))
+      return res.status(HTTP_STATUS.CONFLICT).json(errorResponse("Username or email already exists"))
     }
 
     // Create new user (password will be hashed by model hook)
@@ -69,7 +76,7 @@ async function register(req, res) {
     })
 
     // Generate token
-    const token = generateToken(newUser.id, newUser.role)
+    const token = generateToken(newUser);
     setTokenCookie(res, token)
 
     // Return user data (without password)
@@ -83,21 +90,21 @@ async function register(req, res) {
       createdAt: newUser.createdAt,
     }
 
-    return res.status(HTTP_STATUS.CREATED).json(successResponse(userResponse, MESSAGES.REGISTRATION_SUCCESSFUL))
-  } catch (regError) {
+    return res.status(HTTP_STATUS.CREATED).json(successResponse(userResponse, "User registered successfully"))
+  } catch (regError: any) {
     console.error("Registration error:", regError)
     if (regError.name === "SequelizeValidationError") {
-      const messages = regError.errors.map((e) => e.message).join(", ")
+      const messages = regError.errors.map((e: any) => e.message).join(", ")
       return res.status(HTTP_STATUS.BAD_REQUEST).json(errorResponse(`Validation error: ${messages}`))
     }
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(errorResponse(MESSAGES.REGISTRATION_FAILED))
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(errorResponse("Registration failed"))
   }
 };
 
 /**
  * Login user
  */
-async function login(req, res) {
+export async function login(req: Request, res: Response): Promise<Response> {
   try {
     const { username, password } = req.body
 
@@ -114,17 +121,17 @@ async function login(req, res) {
     })
 
     if (!user) {
-      return res.status(HTTP_STATUS.UNAUTHORIZED).json(errorResponse(MESSAGES.INVALID_CREDENTIALS))
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json(errorResponse("Invalid credentials"))
     }
 
     // Check password
     const isPasswordValid = await user.comparePassword(password)
     if (!isPasswordValid) {
-      return res.status(HTTP_STATUS.UNAUTHORIZED).json(errorResponse(MESSAGES.INVALID_CREDENTIALS))
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json(errorResponse("Invalid credentials"))
     }
 
     // Generate token
-    const token = generateToken(user.id, user.role)
+    const token = generateToken(user);
     setTokenCookie(res, token)
 
     // Return user data (without password)
@@ -138,17 +145,17 @@ async function login(req, res) {
       createdAt: user.createdAt,
     }
 
-    return res.json(successResponse(userResponse, MESSAGES.LOGIN_SUCCESSFUL))
+    return res.json(successResponse(userResponse, "Login successful"))
   } catch (loginError) {
     console.error("Login error:", loginError)
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(errorResponse(MESSAGES.LOGIN_FAILED))
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(errorResponse("Login failed"))
   }
 };
 
 /**
  * Logout user
  */
-async function logout(req, res) {
+export async function logout(req: Request, res: Response): Promise<Response> {
   try {
     // Clear the token cookie
     res.clearCookie(COOKIE_CONFIG.NAME, {
@@ -157,7 +164,7 @@ async function logout(req, res) {
       sameSite: COOKIE_CONFIG.SAME_SITE,
     })
 
-    return res.json(successResponse(null, MESSAGES.LOGOUT_SUCCESSFUL))
+    return res.json(successResponse(null, "Logout successful"))
   } catch (logoutError) {
     console.error("Logout error:", logoutError)
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(errorResponse("Logout failed"))
@@ -165,11 +172,15 @@ async function logout(req, res) {
 };
 
 /**
- * Get current user info
+ * Get user profile (protected route)
  */
-async function me(req, res) {
+export async function me(req: Request, res: Response): Promise<Response> {
   try {
     const user = req.user // Set by auth middleware
+
+    if (!user) {
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json(errorResponse("User not authenticated"));
+    }
 
     const userResponse = {
       id: user.id,
@@ -181,10 +192,10 @@ async function me(req, res) {
       createdAt: user.createdAt,
     }
 
-    return res.json(successResponse(userResponse, MESSAGES.USER_DATA_RETRIEVED))
+    return res.json(successResponse(userResponse, "User data retrieved successfully"))
   } catch (getUserError) {
     console.error("Get user error:", getUserError)
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(errorResponse(MESSAGES.FAILED_GET_USER_DATA))
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(errorResponse("Failed to get user data"))
   }
 };
 
