@@ -1,9 +1,6 @@
+import { USER_ROLES } from "@/models/role/Role";
 import { sampleBrands, sampleUser, sampleUserRoles } from "./sample";
-import {
-  BrandData,
-  GiftCardData,
-} from "./types";
-import { generateActivationCode } from "./utils";
+import { generateSampleGiftCards } from "./utils";
 
 interface SeedOptions {
   force?: boolean;
@@ -13,58 +10,6 @@ interface SeedOptions {
   count?: number;
 }
 
-function generateSampleGiftCards(brands: BrandData[]): GiftCardData[] {
-  const sampleCards: GiftCardData[] = [];
-
-  brands.forEach((brand, index) => {
-    // Generate 2-3 gift cards per brand
-    for (let i = 0; i < Math.floor(Math.random() * 2) + 2; i++) {
-      sampleCards.push({
-        brandId: index + 1, // Assuming auto-increment starts at 1
-        brandName: brand.name,
-        amount: [25.0, 50.0, 100.0, 200.0][Math.floor(Math.random() * 4)],
-        activationCode: generateActivationCode(),
-        senderName: ["John Doe", "Jane Smith", "Alice Johnson", "Bob Wilson"][
-          Math.floor(Math.random() * 4)
-        ],
-        recipientName: [
-          "Mike Brown",
-          "Sarah Davis",
-          "Tom Miller",
-          "Lisa Garcia",
-        ][Math.floor(Math.random() * 4)],
-        recipientEmail: `recipient${Math.floor(
-          Math.random() * 1000
-        )}@example.com`,
-        recipientPhone: `+1${Math.floor(Math.random() * 9000000000) + 1000000000
-          }`,
-        message: [
-          "Happy Birthday!",
-          "Congratulations!",
-          "Enjoy your gift!",
-          "From your friend",
-        ][Math.floor(Math.random() * 4)],
-        deliveryType: ["personal", "send_as_gift"][
-          Math.floor(Math.random() * 2)
-        ],
-        deliveryTime: ["immediately", "custom"][Math.floor(Math.random() * 2)],
-        deliveryDate: new Date(
-          Date.now() + Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000
-        )
-          .toISOString()
-          .split("T")[0],
-        period: ["morning", "afternoon", "evening"][
-          Math.floor(Math.random() * 3)
-        ],
-        status: "active",
-        isUsed: Math.random() < 0.3, // 30% chance of being used
-        usedAt: Math.random() < 0.3 ? new Date() : null,
-      });
-    }
-  });
-
-  return sampleCards;
-}
 
 /**
  * Seed brands into the database
@@ -92,6 +37,7 @@ async function seedBrands(
  */
 async function seedGiftCards(
   GiftCard: any,
+  createdBrands: any[],
   options: SeedOptions = {}
 ): Promise<any[]> {
   const { force = false, ignoreDuplicates = true } = options;
@@ -100,7 +46,7 @@ async function seedGiftCards(
     await GiftCard.destroy({ where: {} });
   }
 
-  const sampleGiftCards = generateSampleGiftCards(sampleBrands);
+  const sampleGiftCards = generateSampleGiftCards(createdBrands);
 
   const createdGiftCards = await GiftCard.bulkCreate(sampleGiftCards, {
     ignoreDuplicates,
@@ -128,11 +74,25 @@ async function seedRoles(Role: any, options: SeedOptions = {}): Promise<any[]> {
 /**
  * Seed users into the database
  */
-async function seedUsers(User: any, options: SeedOptions = {}): Promise<any[]> {
+async function seedUsers(User: any, createdRoles: any[], options: SeedOptions = {}): Promise<any[]> {
   const { force = false, ignoreDuplicates = true } = options;
 
   if (force) {
     await User.destroy({ where: {} });
+  }
+
+  const adminRole = createdRoles.find(i => {
+    return i.name === USER_ROLES.ADMIN
+  })
+  const userRole = createdRoles.find(i => {
+    return i.name === USER_ROLES.USER
+  })
+  for (const [idx, i] of sampleUser.entries()) {
+    if (idx === 0) {
+      i.role_id = adminRole.id
+    } else {
+      i.role_id = userRole.id
+    }
   }
 
   const createdUsers = await User.bulkCreate(sampleUser, {
@@ -179,8 +139,8 @@ export async function seedDatabase(
   }
 
   // Seed users if User model is provided
-  if (Role && User) {
-    createdUsers = await seedUsers(User, { force, ignoreDuplicates });
+  if (createdRoles && User) {
+    createdUsers = await seedUsers(User, createdRoles, { force, ignoreDuplicates });
   }
 
   // Seed brands unless usersOnly is true
@@ -189,7 +149,7 @@ export async function seedDatabase(
 
     // Seed gift cards unless brandsOnly is true
     if (!brandsOnly) {
-      createdGiftCards = await seedGiftCards(GiftCard, {
+      createdGiftCards = await seedGiftCards(GiftCard, createdBrands, {
         force,
         ignoreDuplicates,
       });
@@ -204,4 +164,4 @@ export async function seedDatabase(
   };
 }
 
-export { generateSampleGiftCards, seedBrands, seedGiftCards, seedUsers };
+export { seedBrands, seedGiftCards, seedUsers };

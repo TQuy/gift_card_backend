@@ -1,10 +1,30 @@
-import { Sequelize, DataTypes } from "sequelize";
+import { Sequelize, DataTypes, Model } from "sequelize";
+import { BrandAttributes, BrandCreationAttributes } from "./types";
 
 export const BRAND_STATUS = { ACTIVE: 1, INACTIVE: 0 } as const;
 
-export default (sequelize: Sequelize): any => {
-  const Brand = sequelize.define(
-    "Brand",
+// Define the Brand model class extending Sequelize Model
+class BrandModel
+  extends Model<BrandAttributes, BrandCreationAttributes>
+  implements BrandAttributes {
+  public id!: number;
+  public name!: string;
+  public description!: string;
+  public logo!: string;
+  public status!: number;
+  public country!: string;
+  public phoneNumber!: string;
+  public company!: string;
+  public products!: number;
+  public readonly createdAt?: Date;
+  public readonly updatedAt?: Date;
+
+  // Static property for constants
+  public static readonly BRAND_STATUS = BRAND_STATUS;
+}
+
+export default function (sequelize: Sequelize) {
+  BrandModel.init(
     {
       id: {
         type: DataTypes.INTEGER,
@@ -29,7 +49,10 @@ export default (sequelize: Sequelize): any => {
       status: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: 1,
+        defaultValue: BRAND_STATUS.ACTIVE,
+        validate: {
+          isIn: [Object.values(BRAND_STATUS)],
+        },
       },
       country: {
         type: DataTypes.STRING,
@@ -53,13 +76,14 @@ export default (sequelize: Sequelize): any => {
       },
     },
     {
+      sequelize,
       tableName: "brands",
       timestamps: true,
-      createdAt: "createdAt",
-      updatedAt: "updatedAt",
+      modelName: "Brand",
+      createdAt: "created_at",
+      updatedAt: "updated_at",
     }
   );
 
-  (Brand as any).BRAND_STATUS = BRAND_STATUS;
-  return Brand;
-};
+  return BrandModel;
+}

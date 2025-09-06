@@ -1,5 +1,6 @@
 import { Brand } from "@/models";
 import { PaginationOptions, BrandData, BrandsResult } from "./types";
+import { BRAND_STATUS } from "@/models/brand/Brand";
 
 /**
  * Calculate pagination metadata
@@ -23,28 +24,33 @@ export async function getAllActiveBrands(
 ): Promise<BrandsResult> {
   const { page, limit, offset } = paginationOptions;
 
-  const { count, rows } = await Brand.findAndCountAll({
-    where: { status: 1 },
-    limit: limit,
-    offset: offset,
-    order: [["createdAt", "ASC"]],
-  });
+  try {
+    const { count, rows } = await Brand.findAndCountAll({
+      where: { status: BRAND_STATUS.ACTIVE },
+      limit: limit,
+      offset: offset,
+      order: [["created_at", "ASC"]],
+    });
 
-  // Transform raw data to plain objects
-  const brandsData: BrandData[] = rows.map((brand: any) => brand.toJSON());
+    // Transform raw data to plain objects
+    const brandsData: BrandData[] = rows.map((brand: any) => brand.toJSON());
 
-  // Calculate pagination metadata
-  const { totalPages } = calculatePagination(count, page, limit);
+    // Calculate pagination metadata
+    const { totalPages } = calculatePagination(count, page, limit);
 
-  return {
-    brands: brandsData,
-    pagination: {
-      page,
-      limit,
-      total: count,
-      totalPages,
-    },
-  };
+    return {
+      brands: brandsData,
+      pagination: {
+        page,
+        limit,
+        total: count,
+        totalPages,
+      },
+    };
+  } catch (error) {
+    console.error("Error in getAllActiveBrands:", error);
+    throw error;
+  }
 }
 
 /**
@@ -55,7 +61,7 @@ export async function getBrandById(brandId: number): Promise<BrandData | null> {
   const brand = await Brand.findOne({
     where: {
       id: brandId,
-      status: 1,
+      status: BRAND_STATUS.ACTIVE,
     },
   });
 
@@ -75,7 +81,7 @@ export async function findAndValidateBrand(brandId: number): Promise<any> {
   const brand = await Brand.findOne({
     where: {
       id: brandId,
-      status: 1,
+      status: BRAND_STATUS.ACTIVE,
     },
   });
 

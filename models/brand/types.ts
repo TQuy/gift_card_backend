@@ -8,8 +8,8 @@ export interface BrandAttributes {
   phoneNumber: string;
   company: string;
   products: number;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt?: Date; // Make optional since Sequelize handles it
+  updatedAt?: Date; // Make optional since Sequelize handles it
 }
 
 export interface BrandCreationAttributes {

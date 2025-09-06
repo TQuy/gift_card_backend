@@ -121,5 +121,5 @@ export const sampleUser = [
     email: "admin@example.com",
     password: "1",
     role_id: sampleUserRoles.findIndex(r => r.name === USER_ROLES.ADMIN) + 1,
-  }
+  },
 ]
