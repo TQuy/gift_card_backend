@@ -1,20 +1,8 @@
 import bcrypt from "bcryptjs";
-import { Sequelize, DataTypes, Model, ModelDefined } from "sequelize";
+import { Sequelize, DataTypes } from "sequelize";
 import { USER_ROLES } from "@/config/constants";
 
-interface UserAttributes {
-  id: number;
-  username: string;
-  email: string;
-  password: string;
-  role: number;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-interface UserCreationAttributes extends Omit<UserAttributes, 'id' | 'createdAt' | 'updatedAt'> { }
-
-export default (sequelize: Sequelize, DataTypes: typeof import("sequelize").DataTypes): any => {
+export default (sequelize: Sequelize): any => {
   const User = sequelize.define(
     "User",
     {

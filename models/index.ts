@@ -19,9 +19,9 @@ import BrandModel from "./Brand";
 import GiftCardModel from "./GiftCard";
 import UserModel from "./User";
 
-const Brand = BrandModel(sequelize, DataTypes);
-const GiftCard = GiftCardModel(sequelize, DataTypes);
-const User = UserModel(sequelize, DataTypes);
+const Brand = BrandModel(sequelize);
+const GiftCard = GiftCardModel(sequelize);
+const User = UserModel(sequelize);
 
 // Define associations
 Brand.hasMany(GiftCard, { foreignKey: "brandId", as: "giftCards" });
