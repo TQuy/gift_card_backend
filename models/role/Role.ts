@@ -1,17 +1,34 @@
-import { Sequelize, DataTypes } from "sequelize";
+import { Sequelize, DataTypes, Model } from "sequelize";
+import { RoleAttributes, RoleCreationAttributes } from "./types";
 
 export const ROLE_STATUS = {
   ACTIVE: 1,
   INACTIVE: 0
 } as const
+
 export const USER_ROLES = {
   ADMIN: 'admin',
   USER: 'user',
 } as const
 
-export default (sequelize: Sequelize) => {
-  const Role = sequelize.define(
-    "Role",
+// Define the Role model class extending Sequelize Model
+class RoleModel
+  extends Model<RoleAttributes, RoleCreationAttributes>
+  implements RoleAttributes {
+  public id!: number;
+  public name!: string;
+  public description?: string;
+  public status!: number;
+  public readonly createdAt?: Date;
+  public readonly updatedAt?: Date;
+
+  // Static property for constants
+  public static readonly ROLE_STATUS = ROLE_STATUS;
+  public static readonly USER_ROLES = USER_ROLES;
+}
+
+export default function (sequelize: Sequelize) {
+  RoleModel.init(
     {
       id: {
         type: DataTypes.INTEGER,
@@ -40,11 +57,13 @@ export default (sequelize: Sequelize) => {
       },
     },
     {
+      sequelize,
       tableName: "roles",
       timestamps: true,
+      modelName: "Role",
     }
   );
 
-  return Role;
+  return RoleModel;
 };
 
