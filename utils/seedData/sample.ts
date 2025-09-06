@@ -117,9 +117,9 @@ export const sampleUserRoles = [
 
 export const sampleUser = [
   {
-    username: "admin@example.com",
+    username: "admin",
     email: "admin@example.com",
-    password: "1",
+    password: "admin123",
     role_id: sampleUserRoles.findIndex(r => r.name === USER_ROLES.ADMIN) + 1,
   },
 ]

@@ -32,6 +32,7 @@ interface PaginatedSuccessResponse<T = any> {
 }
 
 interface ErrorResponse {
+  status: "error";
   error: string;
   details?: string[];
 }
@@ -56,8 +57,8 @@ export function successResponse<T = any>(data: T, message?: string): SuccessResp
  * Create a paginated success response
  */
 export function paginatedResponse<T = any>(
-  data: T[], 
-  paginationInfo: PaginationInfo, 
+  data: T[],
+  paginationInfo: PaginationInfo,
   additionalData: Record<string, any> = {}
 ): PaginatedSuccessResponse<T> {
   const { page, limit, total, totalPages } = paginationInfo;
@@ -82,6 +83,7 @@ export function paginatedResponse<T = any>(
  */
 export function errorResponse(message: string, statusCode?: number): ErrorResponse {
   return {
+    status: "error",
     error: message,
   };
 }
@@ -101,6 +103,7 @@ export function validationErrorResponse(errors: string[]): ErrorResponse {
   }
 
   return {
+    status: "error",
     error: "Validation failed",
     details: errors,
   };

@@ -25,8 +25,8 @@ describe("Authentication API", () => {
 
       expect(res.body.status).toBe("success");
       expect(res.body.message).toBe("Login successful");
-      expect(res.body.data).toHaveProperty("user");
-      expect(res.body.data.user.email).toBe(loginData.email);
+      expect(res.body.data).toHaveProperty("id");
+      expect(res.body.data.email).toBe(loginData.email);
 
       // Check if cookie is set
       expect(res.headers["set-cookie"]).toBeDefined();
@@ -91,9 +91,9 @@ describe("Authentication API", () => {
 
       expect(res.body.status).toBe("success");
       expect(res.body.message).toBe("User registered successfully");
-      expect(res.body.data).toHaveProperty("user");
-      expect(res.body.data.user.email).toBe(userData.email);
-      expect(res.body.data.user.username).toBe(userData.username);
+      expect(res.body.data).toHaveProperty("id");
+      expect(res.body.data.email).toBe(userData.email);
+      expect(res.body.data.username).toBe(userData.username);
     });
 
     it("should return 400 when registering with existing email", async () => {
@@ -163,8 +163,8 @@ describe("Authentication API", () => {
         .expect(200);
 
       expect(res.body.status).toBe("success");
-      expect(res.body.data).toHaveProperty("user");
-      expect(res.body.data.user.email).toBe("admin@example.com");
+      expect(res.body.data).toHaveProperty("id");
+      expect(res.body.data.email).toBe("admin@example.com");
     });
 
     it("should return 401 when not logged in", async () => {

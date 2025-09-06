@@ -1,32 +1,16 @@
-import jwt, { SignOptions } from "jsonwebtoken";
-import { Op } from "sequelize";
 import { Request, Response } from "express";
-import { User } from "@/models";
-import { successResponse, errorResponse } from "@/utils/responseHelpers";
+import { successResponse, errorResponse } from "../utils/responseHelpers";
 import {
-  JWT_DEFAULTS,
   COOKIE_CONFIG,
   NODE_ENVIRONMENTS,
   HTTP_STATUS
-} from "@/config/constants";
-import { USER_ROLES } from "@/models/role/Role";
-
-// JWT secret - in production, use environment variable
-const JWT_SECRET: string = process.env.JWT_SECRET || JWT_DEFAULTS.SECRET;
-const JWT_EXPIRES_IN: string = process.env.JWT_EXPIRES_IN || JWT_DEFAULTS.EXPIRES_IN;
-
-/**
- * Generate JWT token with user information
- */
-function generateToken(user: any): string {
-  const payload = {
-    id: user.id,
-    email: user.email,
-    role: user.role,
-  };
-
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN } as SignOptions);
-}
+} from "../config/constants";
+import {
+  generateToken,
+  registerUser,
+  loginUser,
+  getUserById,
+} from "../services/auth";
 
 /**
  * Set JWT cookie
@@ -43,119 +27,88 @@ function setTokenCookie(res: Response, token: string): void {
 /**
  * Register a new user
  */
-export async function register(req: Request, res: Response): Promise<Response> {
+async function register(req: Request, res: Response): Promise<Response> {
   try {
-    const { username, email, password, role } = req.body
+    const { username, email, password, role } = req.body;
 
-    // Basic validation
-    if (!username || !email || !password) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(errorResponse("Username, email, and password are required"))
-    }
-
-    if (password.length < 6) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(errorResponse("Password must be at least 6 characters long"))
-    }
-
-    // Check if user already exists
-    const existingUser = await User.findOne({
-      where: {
-        $or: [{ username }, { email }],
-      },
-    })
-
-    if (existingUser) {
-      return res.status(HTTP_STATUS.CONFLICT).json(errorResponse("Username or email already exists"))
-    }
-
-    // Create new user (password will be hashed by model hook)
-    const newUser = await User.create({
+    // Use service layer for registration
+    const user = await registerUser({
       username,
       email,
       password,
-      role: role || USER_ROLES.USER,
-    })
+      role,
+    });
 
     // Generate token
-    const token = generateToken(newUser);
-    setTokenCookie(res, token)
+    const token = generateToken(user);
+    setTokenCookie(res, token);
 
-    // Return user data (without password)
-    const userResponse = {
-      id: newUser.id,
-      username: newUser.username,
-      email: newUser.email,
-      role: newUser.role,
-      roleName: newUser.getRoleName(),
-      isAdmin: newUser.isAdmin(),
-      createdAt: newUser.createdAt,
-    }
-
-    return res.status(HTTP_STATUS.CREATED).json(successResponse(userResponse, "User registered successfully"))
+    return res.status(HTTP_STATUS.CREATED).json(
+      successResponse(user, "User registered successfully")
+    );
   } catch (regError: any) {
-    console.error("Registration error:", regError)
-    if (regError.name === "SequelizeValidationError") {
-      const messages = regError.errors.map((e: any) => e.message).join(", ")
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(errorResponse(`Validation error: ${messages}`))
+    console.error("Registration error:", regError);
+
+    if (regError.message === "Username, email, and password are required") {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(errorResponse(regError.message));
     }
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(errorResponse("Registration failed"))
+
+    if (regError.message === "Password must be at least 6 characters long") {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(errorResponse(regError.message));
+    }
+
+    if (regError.message === "Username or email already exists") {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(errorResponse(regError.message));
+    }
+
+    if (regError.name === "SequelizeValidationError") {
+      const messages = regError.errors.map(function (e: any) {
+        return e.message;
+      }).join(", ");
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(errorResponse(`Validation error: ${messages}`));
+    }
+
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(errorResponse("Registration failed"));
   }
-};
+}
 
 /**
  * Login user
  */
-export async function login(req: Request, res: Response): Promise<Response> {
+async function login(req: Request, res: Response): Promise<Response> {
   try {
-    const { username, password } = req.body
+    const { username, email, password } = req.body;
 
-    // Basic validation
-    if (!username || !password) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json(errorResponse("Username and password are required"))
-    }
-
-    // Find user by username or email
-    const user = await User.findOne({
-      where: {
-        [Op.or]: [{ username }, { email: username }],
-      },
-    })
-
-    if (!user) {
-      return res.status(HTTP_STATUS.UNAUTHORIZED).json(errorResponse("Invalid credentials"))
-    }
-
-    // Check password
-    const isPasswordValid = await user.comparePassword(password)
-    if (!isPasswordValid) {
-      return res.status(HTTP_STATUS.UNAUTHORIZED).json(errorResponse("Invalid credentials"))
-    }
+    // Use service layer for login (accepts either username or email)
+    const user = await loginUser({
+      username: username || email, // Use username if provided, otherwise use email
+      password,
+    });
 
     // Generate token
     const token = generateToken(user);
-    setTokenCookie(res, token)
+    setTokenCookie(res, token);
 
-    // Return user data (without password)
-    const userResponse = {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      roleName: user.getRoleName(),
-      isAdmin: user.isAdmin(),
-      createdAt: user.createdAt,
+    return res.json(successResponse(user, "Login successful"));
+  } catch (loginError: any) {
+    console.error("Login error:", loginError);
+
+    if (loginError.message === "Username and password are required") {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(errorResponse("Email and password are required"));
     }
 
-    return res.json(successResponse(userResponse, "Login successful"))
-  } catch (loginError) {
-    console.error("Login error:", loginError)
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(errorResponse("Login failed"))
+    if (loginError.message === "Invalid credentials") {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(errorResponse(loginError.message));
+    }
+
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(errorResponse("Login failed"));
   }
-};
+}
 
 /**
  * Logout user
  */
-export async function logout(req: Request, res: Response): Promise<Response> {
+async function logout(req: Request, res: Response): Promise<Response> {
   try {
     // Clear the token cookie
     res.clearCookie(COOKIE_CONFIG.NAME, {
@@ -174,35 +127,31 @@ export async function logout(req: Request, res: Response): Promise<Response> {
 /**
  * Get user profile (protected route)
  */
-export async function me(req: Request, res: Response): Promise<Response> {
+async function me(req: Request, res: Response): Promise<Response> {
   try {
-    const user = req.user // Set by auth middleware
+    const userId = (req as any).userId; // Set by auth middleware
 
-    if (!user) {
+    if (!userId) {
       return res.status(HTTP_STATUS.UNAUTHORIZED).json(errorResponse("User not authenticated"));
     }
 
-    const userResponse = {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      roleName: user.getRoleName(),
-      isAdmin: user.isAdmin(),
-      createdAt: user.createdAt,
+    // Use service layer to get user
+    const user = await getUserById(userId);
+
+    if (!user) {
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json(errorResponse("User not found"));
     }
 
-    return res.json(successResponse(userResponse, "User data retrieved successfully"))
+    return res.json(successResponse(user, "User data retrieved successfully"));
   } catch (getUserError) {
-    console.error("Get user error:", getUserError)
-    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(errorResponse("Failed to get user data"))
+    console.error("Get user error:", getUserError);
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(errorResponse("Failed to get user data"));
   }
-};
+}
 
-module.exports = {
+export {
   register,
   login,
   logout,
   me,
-  generateToken,
-}
+};
