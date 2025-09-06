@@ -1,11 +1,9 @@
 import { BRAND_STATUS } from "@/models/Brand";
+import { USER_ROLES } from "@/config/constants";
 
 function getRandomProducts(): number {
   return Math.floor(Math.random() * 500) + 1;
 }
-
-// Import USER_ROLES constant
-const USER_ROLES = { ADMIN: 1, USER: 2 } as const;
 
 interface BrandData {
   name: string;

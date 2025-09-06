@@ -3,6 +3,7 @@
  */
 
 import { BRAND_STATUS } from "@/models/Brand";
+import { USER_ROLES } from "@/config/constants";
 
 // User interface (matching our Sequelize User model)
 export interface User {
@@ -30,10 +31,7 @@ declare global {
 }
 
 // User role types
-export enum UserRole {
-  ADMIN = 1,
-  USER = 2
-}
+export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
 
 // API Response types
 export interface ApiResponse<T = any> {

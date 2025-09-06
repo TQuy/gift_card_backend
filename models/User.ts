@@ -1,7 +1,6 @@
 import bcrypt from "bcryptjs";
 import { Sequelize, DataTypes, Model, ModelDefined } from "sequelize";
-
-const USER_ROLES = { ADMIN: 1, USER: 2 } as const;
+import { USER_ROLES } from "@/config/constants";
 
 interface UserAttributes {
   id: number;
@@ -13,7 +12,7 @@ interface UserAttributes {
   updatedAt?: Date;
 }
 
-interface UserCreationAttributes extends Omit<UserAttributes, 'id' | 'createdAt' | 'updatedAt'> {}
+interface UserCreationAttributes extends Omit<UserAttributes, 'id' | 'createdAt' | 'updatedAt'> { }
 
 export default (sequelize: Sequelize, DataTypes: typeof import("sequelize").DataTypes): any => {
   const User = sequelize.define(
