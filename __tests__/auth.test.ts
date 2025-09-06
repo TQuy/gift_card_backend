@@ -1,6 +1,7 @@
 import request from "supertest";
 import { app } from "../server";
 import { User, initializeTestDatabase } from "../models";
+import { sampleUser, sampleUserRoles } from "../utils/seedData/sample";
 
 // Set test environment
 process.env.NODE_ENV = "test";
@@ -14,8 +15,8 @@ describe("Authentication API", () => {
   describe("POST /api/auth/login", () => {
     it("should login with valid credentials", async () => {
       const loginData = {
-        email: "admin@example.com",
-        password: "admin123"
+        email: sampleUser.email,
+        password: sampleUser.password
       };
 
       const res = await request(app)
@@ -34,7 +35,7 @@ describe("Authentication API", () => {
 
     it("should return 400 with invalid credentials", async () => {
       const loginData = {
-        email: "admin@example.com",
+        email: sampleUser.email,
         password: "wrongpassword"
       };
 
@@ -49,7 +50,7 @@ describe("Authentication API", () => {
 
     it("should return 400 with missing email", async () => {
       const loginData = {
-        password: "admin123"
+        password: sampleUser.password
       };
 
       const res = await request(app)
@@ -63,7 +64,7 @@ describe("Authentication API", () => {
 
     it("should return 400 with missing password", async () => {
       const loginData = {
-        email: "admin@example.com"
+        email: sampleUser.email
       };
 
       const res = await request(app)
@@ -99,7 +100,7 @@ describe("Authentication API", () => {
     it("should return 400 when registering with existing email", async () => {
       const userData = {
         username: "admin2",
-        email: "admin@example.com", // This email already exists
+        email: sampleUser.email, // This email already exists
         password: "password123"
       };
 
@@ -117,8 +118,8 @@ describe("Authentication API", () => {
     it("should logout successfully", async () => {
       // First login to get a session
       const loginData = {
-        email: "admin@example.com",
-        password: "admin123"
+        email: sampleUser.email,
+        password: sampleUser.password
       };
 
       const loginRes = await request(app)
@@ -144,8 +145,8 @@ describe("Authentication API", () => {
     it("should get current user info when logged in", async () => {
       // First login to get a session
       const loginData = {
-        email: "admin@example.com",
-        password: "admin123"
+        email: sampleUser.email,
+        password: sampleUser.password
       };
 
       const loginRes = await request(app)
@@ -164,7 +165,7 @@ describe("Authentication API", () => {
 
       expect(res.body.status).toBe("success");
       expect(res.body.data).toHaveProperty("id");
-      expect(res.body.data.email).toBe("admin@example.com");
+      expect(res.body.data.email).toBe(sampleUser.email);
     });
 
     it("should return 401 when not logged in", async () => {

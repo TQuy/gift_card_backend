@@ -1,5 +1,7 @@
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
+import { sampleUser } from "./utils/seedData/sample";
+import { USER_ROLES } from "./models/role/Role";
 
 const options: swaggerJsdoc.Options = {
   definition: {
@@ -32,10 +34,13 @@ const options: swaggerJsdoc.Options = {
         User: {
           type: "object",
           properties: {
-            id: { type: "string", example: "123e4567-e89b-12d3-a456-426614174000" },
-            username: { type: "string", example: "admin" },
-            email: { type: "string", example: "admin@example.com" },
-            role: { type: "string", example: "admin" },
+            id: { type: "integer", example: 1 },
+            username: { type: "string", example: sampleUser.username },
+            email: { type: "string", example: sampleUser.password },
+            role_id: { type: "integer", example: 1 },
+            roleName: { type: "string", example: USER_ROLES.ADMIN },
+            isAdmin: { type: "boolean", example: true },
+            createdAt: { type: "string", format: "date-time", example: "2024-01-01T00:00:00.000Z" },
           },
         },
         Error: {

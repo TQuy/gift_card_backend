@@ -1,5 +1,5 @@
 import { USER_ROLES } from "@/models/role/Role";
-import { sampleBrands, sampleUser, sampleUserRoles } from "./sample";
+import { sampleBrands, sampleUsers, sampleUserRoles } from "./sample";
 import { generateSampleGiftCards } from "./utils";
 
 interface SeedOptions {
@@ -87,7 +87,7 @@ async function seedUsers(User: any, createdRoles: any[], options: SeedOptions = 
   const userRole = createdRoles.find(i => {
     return i.name === USER_ROLES.USER
   })
-  for (const [idx, i] of sampleUser.entries()) {
+  for (const [idx, i] of sampleUsers.entries()) {
     if (idx === 0) {
       i.role_id = adminRole.id
     } else {
@@ -95,7 +95,7 @@ async function seedUsers(User: any, createdRoles: any[], options: SeedOptions = 
     }
   }
 
-  const createdUsers = await User.bulkCreate(sampleUser, {
+  const createdUsers = await User.bulkCreate(sampleUsers, {
     ignoreDuplicates,
     returning: true,
     individualHooks: true, // Important: enables password hashing hooks

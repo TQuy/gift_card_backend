@@ -115,11 +115,13 @@ export const sampleUserRoles = [
   }
 ]
 
-export const sampleUser = [
-  {
-    username: "admin",
-    email: "admin@example.com",
-    password: "admin123",
-    role_id: sampleUserRoles.findIndex(r => r.name === USER_ROLES.ADMIN) + 1,
-  },
+export const sampleUser = {
+  username: "admin",
+  email: "admin@example.com",
+  password: "1",
+  role_id: sampleUserRoles.findIndex(r => r.name === USER_ROLES.ADMIN) + 1,
+}
+
+export const sampleUsers = [
+  sampleUser
 ]

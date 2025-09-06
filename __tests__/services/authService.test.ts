@@ -3,15 +3,14 @@ import {
   findUserByUsernameOrEmail,
   checkUserExists,
   createUser,
-  validateUserPassword,
   transformUserResponse,
   registerUser,
   loginUser,
   getUserById,
 } from "../../services/auth";
-import { User, Role, initializeTestDatabase } from "../../models";
+import { initializeTestDatabase } from "../../models";
 import { USER_ROLES } from "../../models/role/Role";
-import { seedDatabase } from "../../utils/seedData";
+import { sampleUser } from "../../utils/seedData/sample";
 
 // Set test environment
 process.env.NODE_ENV = "test";
@@ -62,9 +61,9 @@ describe("Auth Service", function () {
       it("should transform user data correctly for admin", function () {
         const mockUser = {
           id: 1,
-          username: "admin",
-          email: "admin@example.com",
-          role_id: 1,
+          username: sampleUser.username,
+          email: sampleUser.email,
+          role_id: sampleUser.role_id,
           createdAt: new Date("2023-01-01"),
           userRole: {
             name: USER_ROLES.ADMIN
@@ -75,8 +74,8 @@ describe("Auth Service", function () {
 
         expect(result).toEqual({
           id: 1,
-          username: "admin",
-          email: "admin@example.com",
+          username: sampleUser.username,
+          email: sampleUser.email,
           role_id: 1,
           roleName: USER_ROLES.ADMIN,
           isAdmin: true,
@@ -130,19 +129,19 @@ describe("Auth Service", function () {
   describe("Database Operations", function () {
     describe("findUserByUsernameOrEmail", function () {
       it("should find user by username", async function () {
-        const user = await findUserByUsernameOrEmail("admin");
+        const user = await findUserByUsernameOrEmail(sampleUser.username);
 
         expect(user).toBeTruthy();
-        expect(user.username).toBe("admin");
+        expect(user.username).toBe(sampleUser.username);
         expect(user.userRole).toBeTruthy();
         expect(user.userRole.name).toBe(USER_ROLES.ADMIN);
       });
 
       it("should find user by email", async function () {
-        const user = await findUserByUsernameOrEmail("admin@example.com");
+        const user = await findUserByUsernameOrEmail(sampleUser.email);
 
         expect(user).toBeTruthy();
-        expect(user.email).toBe("admin@example.com");
+        expect(user.email).toBe(sampleUser.email);
         expect(user.userRole).toBeTruthy();
       });
 
@@ -161,7 +160,7 @@ describe("Auth Service", function () {
       });
 
       it("should return true for existing email", async function () {
-        const exists = await checkUserExists("newuser", "admin@example.com");
+        const exists = await checkUserExists("newuser", sampleUser.email);
 
         expect(exists).toBe(true);
       });
@@ -248,7 +247,7 @@ describe("Auth Service", function () {
 
       it("should throw error for existing username", async function () {
         const userData = {
-          username: "admin", // Already exists
+          username: sampleUser.username, // Already exists
           email: "newemail@example.com",
           password: "password123"
         };
@@ -262,33 +261,33 @@ describe("Auth Service", function () {
     describe("loginUser", function () {
       it("should login with valid credentials", async function () {
         const credentials = {
-          username: "admin",
-          password: "admin123"
+          username: sampleUser.username,
+          password: sampleUser.password
         };
 
         const result = await loginUser(credentials);
 
         expect(result).toBeTruthy();
-        expect(result.username).toBe("admin");
+        expect(result.username).toBe(sampleUser.username);
         expect(result.roleName).toBe(USER_ROLES.ADMIN);
         expect(result.isAdmin).toBe(true);
       });
 
       it("should login with email as username", async function () {
         const credentials = {
-          username: "admin@example.com",
-          password: "admin123"
+          username: sampleUser.email,
+          password: sampleUser.password
         };
 
         const result = await loginUser(credentials);
 
         expect(result).toBeTruthy();
-        expect(result.email).toBe("admin@example.com");
+        expect(result.email).toBe(sampleUser.email);
       });
 
       it("should throw error for invalid password", async function () {
         const credentials = {
-          username: "admin@example.com",
+          username: sampleUser.email,
           password: "wrongpassword"
         };
 

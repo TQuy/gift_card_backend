@@ -26,12 +26,12 @@ const router = express.Router();
  *           type: string
  *           format: email
  *           description: User email
- *         role:
+ *         role_id:
  *           type: integer
- *           description: User role (1=ADMIN, 2=USER)
+ *           description: User role ID (1=ADMIN, 2=USER)
  *         roleName:
  *           type: string
- *           description: Human-readable role name
+ *           description: Human-readable role name (admin, user)
  *         isAdmin:
  *           type: boolean
  *           description: Whether user has admin privileges

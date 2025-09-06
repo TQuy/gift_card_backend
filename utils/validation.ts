@@ -13,12 +13,6 @@ interface GiftCardValidationResult {
   errors?: string[];
 }
 
-interface PaginationResult {
-  page: number;
-  limit: number;
-  offset: number;
-}
-
 /**
  * Validate and parse brand ID from request parameters
  */
@@ -111,7 +105,11 @@ export function validateGiftCardIssueData(data: any): GiftCardValidationResult {
 /**
  * Validate pagination parameters
  */
-export function validatePagination(query: any): PaginationResult {
+export function validatePagination(query: any): {
+  page: number;
+  limit: number;
+  offset: number;
+} {
   const page = parseInt(query.page) || 1;
   const limit = parseInt(query.limit) || 10;
   const offset = (page - 1) * limit;

@@ -1,9 +1,12 @@
 # Gift Card Issuing API
 
-A RESTful API built with Express.js for managing gift card brands and issuing gift cards.
+A RESTful API built with Express.js for managing gift card brands, issuing gift cards, and user authentication.
 
 ## Features
 
+- User authentication (register, login, logout)
+- JWT-based authentication with HTTP-only cookies
+- Role-based access control (Admin/User)
 - List all available brands
 - View individual brand details
 - Issue gift cards for specific brands
@@ -12,6 +15,13 @@ A RESTful API built with Express.js for managing gift card brands and issuing gi
 - JSON API responses
 
 ## API Endpoints
+
+### Authentication
+
+- `POST /api/auth/register` - Register a new user
+- `POST /api/auth/login` - Login user
+- `POST /api/auth/logout` - Logout user
+- `GET /api/auth/me` - Get current user information (protected)
 
 ### Brands
 
@@ -42,6 +52,34 @@ npm start
 ```
 
 The API will be available at `http://localhost:3000`
+
+## Authentication
+
+### Register User
+
+To register a new user, send a POST request to `/api/auth/register`:
+
+```json
+{
+  "username": "testuser",
+  "email": "test@example.com",
+  "password": "password123",
+  "role": 2
+}
+```
+
+### Login
+
+To login, send a POST request to `/api/auth/login`:
+
+```json
+{
+  "username": "testuser",
+  "password": "password123"
+}
+```
+
+Authentication uses JWT tokens stored in HTTP-only cookies for security.
 
 ## Issue Gift Card
 
@@ -81,7 +119,16 @@ The API comes pre-seeded with these brands:
 
 - Node.js
 - Express.js
+- TypeScript
+- Sequelize ORM
+- SQLite Database
+- JWT Authentication
+- bcryptjs for password hashing
 - UUID for unique identifiers
 - CORS for cross-origin requests
 - Helmet for security headers
 - Morgan for logging
+
+## API Documentation
+
+Interactive API documentation is available via Swagger UI at `http://localhost:3000/api-docs` when the server is running.
