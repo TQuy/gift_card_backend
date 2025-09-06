@@ -14,6 +14,7 @@ export {
   validateUserPassword,
   transformUserResponse,
   registerUser,
+  createAdminUser,
   loginUser,
   getUserById,
 } from "./authService";

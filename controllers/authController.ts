@@ -29,14 +29,15 @@ function setTokenCookie(res: Response, token: string): void {
  */
 async function register(req: Request, res: Response): Promise<Response> {
   try {
-    const { username, email, password, role } = req.body;
+    const { username, email, password } = req.body;
 
-    // Use service layer for registration
+    // Use service layer for registration (role defaults to 'user' in service)
+    // Public registration endpoint always creates users with default 'user' role
     const user = await registerUser({
       username,
       email,
       password,
-      role,
+      // No role specified - will default to 'user' role in service
     });
 
     // Generate token

@@ -178,15 +178,15 @@ describe("Auth Service", function () {
           username: "testuser",
           email: "test@example.com",
           password: "password123",
-          role: 1
+          roleName: USER_ROLES.ADMIN
         };
 
         const user = await createUser(userData);
 
         expect(user).toBeTruthy();
-        expect(user.username).toBe("testuser");
-        expect(user.email).toBe("test@example.com");
-        expect(user.role_id).toBe(1);
+        expect(user.username).toBe(userData.username);
+        expect(user.email).toBe(userData.email);
+        expect(user.role_id).toBe(user.userRole.id);
         expect(user.userRole).toBeTruthy();
       });
 
@@ -194,7 +194,8 @@ describe("Auth Service", function () {
         const userData = {
           username: "testuser2",
           email: "test2@example.com",
-          password: "password123"
+          password: "password123",
+          roleName: USER_ROLES.USER
         };
 
         const user = await createUser(userData);

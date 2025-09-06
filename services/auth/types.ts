@@ -6,7 +6,7 @@ export interface RegisterInput {
   username: string;
   email: string;
   password: string;
-  role?: number;
+  roleName?: string; // Optional role, defaults to USER role
 }
 
 export interface LoginInput {

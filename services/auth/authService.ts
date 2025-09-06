@@ -59,22 +59,19 @@ export async function checkUserExists(username: string, email: string): Promise<
 }
 
 /**
- * Create a new user with role
+ * Create a new user with role (defaults to 'user' role)
  */
 export async function createUser(userData: RegisterInput): Promise<any> {
-  // Get default USER role if no role specified
-  let roleId = userData.role;
+  // Get role ID - use provided role or default to USER role
 
-  if (!roleId) {
-    const userRole = await Role.findOne({ where: { name: USER_ROLES.USER } });
-    roleId = userRole?.id || 2; // Fallback to ID 2 if not found
-  }
+  const userRole = await Role.findOne({ where: { name: userData.roleName } });
+  const roleId = userRole?.id || 2; // Fallback to ID 2 if not found
 
   const newUser = await User.create({
     username: userData.username,
     email: userData.email,
     password: userData.password,
-    role_id: roleId, // Use correct field name
+    role_id: roleId,
   });
 
   // Fetch user with role information
@@ -109,29 +106,53 @@ export function transformUserResponse(user: any): UserWithRole {
 }
 
 /**
- * Register a new user (business logic)
+ * Register a new user (business logic) - defaults to 'user' role
  */
-export async function registerUser(userData: RegisterInput): Promise<UserWithRole> {
+export async function registerUser({
+  username,
+  email,
+  password,
+  roleName = USER_ROLES.USER
+}: RegisterInput): Promise<UserWithRole> {
   // Validate input
-  if (!userData.username || !userData.email || !userData.password) {
+  if (!username || !email || !password) {
     throw new Error('Username, email, and password are required');
   }
 
-  if (userData.password.length < 6) {
+  if (password.length < 6) {
     throw new Error('Password must be at least 6 characters long');
   }
 
   // Check if user exists
-  const userExists = await checkUserExists(userData.username, userData.email);
+  const userExists = await checkUserExists(username, email);
   if (userExists) {
     throw new Error('Username or email already exists');
   }
 
-  // Create user
-  const newUser = await createUser(userData);
+  // Create user (role defaults to 'user' if not specified)
+  const newUser = await createUser({
+    username,
+    email,
+    password,
+    roleName
+  });
 
   // Transform and return
   return transformUserResponse(newUser);
+}
+
+/**
+ * Create admin user (for API or command line use)
+ */
+export async function createAdminUser(userData: {
+  username: string;
+  email: string;
+  password: string;
+}): Promise<UserWithRole> {
+  return await registerUser({
+    ...userData,
+    roleName: USER_ROLES.ADMIN
+  });
 }
 
 /**

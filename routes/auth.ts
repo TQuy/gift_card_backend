@@ -28,7 +28,7 @@ const router = express.Router();
  *           description: User email
  *         role_id:
  *           type: integer
- *           description: User role ID (1=ADMIN, 2=USER)
+ *           description: User role ID
  *         roleName:
  *           type: string
  *           description: Human-readable role name (admin, user)
@@ -69,9 +69,6 @@ const router = express.Router();
  *           type: string
  *           minimum: 6
  *           description: User password (min 6 characters)
- *         role:
- *           type: integer
- *           description: User role (1=ADMIN, 2=USER, defaults to USER)
  */
 
 /**
