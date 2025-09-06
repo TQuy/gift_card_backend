@@ -1,10 +1,50 @@
 import bcrypt from "bcryptjs";
-import { Sequelize, DataTypes } from "sequelize";
-import { USER_ROLES } from "../role/Role";
+import { Sequelize, DataTypes, Model } from "sequelize";
+import Role, { USER_ROLES } from "../role/Role";
+import { UserAttributes, UserCreationAttributes, RoleAttributes } from "./types";
 
-export default (sequelize: Sequelize) => {
-  const User = sequelize.define(
-    "User",
+// Define the User model class extending Sequelize Model
+class UserModel extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
+  public id!: number;
+  public username!: string;
+  public email!: string;
+  public password!: string;
+  public role_id!: number;
+  public readonly createdAt?: Date;
+  public readonly updatedAt?: Date;
+
+  // Optional association property
+  public userRole?: RoleAttributes;
+
+  // Instance method to check password
+  public async comparePassword(candidatePassword: string): Promise<boolean> {
+    return await bcrypt.compare(candidatePassword, this.password);
+  }
+
+  // Instance method to check if user is admin
+  public async isAdmin(): Promise<boolean> {
+    // If role is already loaded, use it
+    if (this.userRole) {
+      return this.userRole.name === USER_ROLES.ADMIN;
+    }
+
+    // Otherwise, fetch the role
+    const RoleModel = this.sequelize!.models.Role;
+    const role = await RoleModel.findByPk(this.role_id);
+    return (role as any)?.name === USER_ROLES.ADMIN;
+  }
+
+  // Static method to define associations
+  public static associate(models: any) {
+    UserModel.belongsTo(models.Role, {
+      foreignKey: 'role_id',
+      as: 'userRole',
+    });
+  }
+}
+
+export default function (sequelize: Sequelize) {
+  UserModel.init(
     {
       id: {
         type: DataTypes.INTEGER,
@@ -41,15 +81,19 @@ export default (sequelize: Sequelize) => {
       },
     },
     {
+      sequelize,
       tableName: "users",
       timestamps: true,
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
+      modelName: "User",
       hooks: {
-        beforeCreate: async (user: any) => {
+        beforeCreate: async (user: UserModel) => {
           if (user.password) {
             user.password = await bcrypt.hash(user.password, 12);
           }
         },
-        beforeUpdate: async (user: any) => {
+        beforeUpdate: async (user: UserModel) => {
           if (user.changed("password")) {
             user.password = await bcrypt.hash(user.password, 12);
           }
@@ -58,16 +102,8 @@ export default (sequelize: Sequelize) => {
     }
   );
 
-  // Instance method to check password
-  (User.prototype as any).comparePassword = async function (candidatePassword: string): Promise<boolean> {
-    return await bcrypt.compare(candidatePassword, this.password);
-  };
+  // Attach the associate method to the model
+  (UserModel as any).associate = UserModel.associate;
 
-  // Static method to check if user is admin
-  (User.prototype as any).isAdmin = async function (): Promise<boolean> {
-    const userRole = await this.getUserRole();
-    return userRole.name === USER_ROLES.ADMIN;
-  };
-
-  return User;
-};
+  return UserModel;
+}

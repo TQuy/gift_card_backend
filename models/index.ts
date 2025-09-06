@@ -3,7 +3,7 @@ import path from "path";
 import { seedDatabase } from "@/utils/seedData";
 // Import models
 import BrandModel from "./brand/Brand";
-import GiftCardModel from "./GiftCard";
+import GiftCardModel from "./giftcard/GiftCard";
 import UserModel from "./user/User";
 import RoleModel from "./role/Role";
 
@@ -24,15 +24,19 @@ const GiftCard = GiftCardModel(sequelize);
 const User = UserModel(sequelize);
 const Role = RoleModel(sequelize);
 
-// Define associations
+// Define associations by calling associate methods
+const models = { Brand, GiftCard, User, Role };
+
+// Call associate methods if they exist
+Object.values(models).forEach((model: any) => {
+  if (model.associate) {
+    model.associate(models);
+  }
+});
+
+// Define other associations that aren't in model files yet
 Brand.hasMany(GiftCard, { foreignKey: "brandId", as: "giftCards" });
 GiftCard.belongsTo(Brand, { foreignKey: "brandId", as: "brand" });
-
-// User and Role many-to-many relationship through UserRole
-User.belongsTo(Role, {
-  foreignKey: 'role_id',
-  as: 'userRole',
-})
 
 // Sync database tables only
 const initializeDatabase = async (): Promise<void> => {

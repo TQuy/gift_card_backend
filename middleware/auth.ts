@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 import { User } from "@/models";
+import { USER_ROLES } from "@/models/role/Role";
 import { errorResponse } from "@/utils/responseHelpers";
 import {
   JWT_DEFAULTS,
@@ -26,8 +27,13 @@ async function authenticateToken(req: Request, res: Response, next: NextFunction
     // Verify token
     const decoded: any = jwt.verify(token, JWT_SECRET);
 
-    // Find user by ID
-    const user = await User.findByPk(decoded.id || decoded.userId);
+    // Find user by ID with role association
+    const user = await User.findByPk(decoded.id || decoded.userId, {
+      include: [{
+        association: 'userRole',
+        attributes: ['id', 'name']
+      }]
+    });
     if (!user) {
       return res.status(HTTP_STATUS.UNAUTHORIZED).json(errorResponse("Invalid token - user not found"));
     }
@@ -35,7 +41,7 @@ async function authenticateToken(req: Request, res: Response, next: NextFunction
     // Add user to request object
     (req as any).user = user;
     (req as any).userId = user.id;
-    (req as any).userRole = user.role;
+    (req as any).userRole = user.userRole?.name;
 
     next();
   } catch (err: any) {
@@ -64,10 +70,10 @@ function requireAdmin(req: Request, res: Response, next: NextFunction): Response
 /**
  * Middleware to check if user has specific role
  */
-function requireRole(allowedRoles: number[]) {
+function requireRole(allowedRoles: string[]) {
   return function (req: Request, res: Response, next: NextFunction): Response | void {
     const user = (req as any).user;
-    if (!user || !allowedRoles.includes(user.role)) {
+    if (!user || !allowedRoles.includes(user.userRole?.name)) {
       return res.status(HTTP_STATUS.FORBIDDEN).json(errorResponse("Insufficient permissions"));
     }
     next();
@@ -83,24 +89,29 @@ async function optionalAuth(req: Request, res: Response, next: NextFunction): Pr
 
     if (token) {
       const decoded: any = jwt.verify(token, JWT_SECRET);
-      const user = await User.findByPk(decoded.id || decoded.userId);
+      const user = await User.findByPk(decoded.id || decoded.userId, {
+        include: [{
+          association: 'userRole',
+          attributes: ['id', 'name']
+        }]
+      });
       if (user) {
         (req as any).user = user;
         (req as any).userId = user.id;
-        (req as any).userRole = user.role;
+        (req as any).userRole = user.userRole?.name;
       } else {
         // If token is invalid, set default admin role
-        (req as any).userRole = 1; // Admin role
+        (req as any).userRole = USER_ROLES.ADMIN;
       }
     } else {
       // If no token, set default admin role for development/testing
-      (req as any).userRole = 1; // Admin role
+      (req as any).userRole = USER_ROLES.ADMIN;
     }
 
     next();
   } catch (err) {
     // Continue without authentication, set default admin role
-    (req as any).userRole = 1; // Admin role
+    (req as any).userRole = USER_ROLES.ADMIN;
     next();
   }
 }
