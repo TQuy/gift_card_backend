@@ -1,9 +1,11 @@
-const express = require("express");
-const router = express.Router();
-const {
+import express from "express";
+import {
   getAllBrands,
   getBrandById,
-} = require("../controllers/brandsController");
+} from "@/controllers/brandsController";
+import { optionalAuth } from "@/middleware/auth";
+
+const router = express.Router();
 
 /**
  * @swagger
@@ -48,13 +50,13 @@ const {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get("/", getAllBrands);
+router.get("/", optionalAuth, getAllBrands);
 
 /**
  * @swagger
  * /api/brands/{id}:
  *   get:
- *     summary: Get a specific brand by ID
+ *     summary: Get a specific brand by ID with gift card count
  *     tags: [Brands]
  *     parameters:
  *       - in: path
@@ -65,7 +67,7 @@ router.get("/", getAllBrands);
  *         description: Brand ID
  *     responses:
  *       200:
- *         description: Brand details
+ *         description: Brand details with gift card count
  *         content:
  *           application/json:
  *             schema:
@@ -75,7 +77,42 @@ router.get("/", getAllBrands);
  *                   type: string
  *                   example: success
  *                 data:
- *                   $ref: '#/components/schemas/Brand'
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     name:
+ *                       type: string
+ *                       example: "Lazada"
+ *                     description:
+ *                       type: string
+ *                       example: "Online shopping platform"
+ *                     logo:
+ *                       type: string
+ *                       example: "lazada-logo.png"
+ *                     status:
+ *                       type: number
+ *                       enum: [0, 1]
+ *                       example: 1 
+ *                     country:
+ *                       type: string
+ *                       example: "Singapore"
+ *                     phoneNumber:
+ *                       type: string
+ *                       example: "+65 6123 4567"
+ *                     company:
+ *                       type: string
+ *                       example: "Lazada Singapore Pte Ltd"
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *                     products:
+ *                       type: integer
+ *                       example: 5
  *       400:
  *         description: Invalid brand ID format
  *         content:
@@ -95,6 +132,6 @@ router.get("/", getAllBrands);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get("/:id", getBrandById);
+router.get("/:id", optionalAuth, getBrandById);
 
-module.exports = router;
+export default router;

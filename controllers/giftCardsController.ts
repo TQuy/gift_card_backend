@@ -1,31 +1,32 @@
-const crypto = require("crypto");
-const { Brand, GiftCard } = require("../models");
-const {
+import crypto from "crypto";
+import { Request, Response } from "express";
+import { Brand, GiftCard } from "@/models";
+import {
   validateBrandId,
   validateGiftCardIssueData,
   validatePagination,
-} = require("../utils/validation");
-const {
+} from "@/utils/validation";
+import {
   successResponse,
   paginatedResponse,
   errorResponse,
   validationErrorResponse,
   buildGiftCardResponse,
-} = require("../utils/responseHelpers");
-const { findAndValidateBrand } = require("./brandsController");
+} from "@/utils/responseHelpers";
+import { findAndValidateBrand } from "@/controllers/brandsController";
 
 /**
  * Issue a gift card for a specific brand
  */
-async function issueGiftCard(req, res) {
+export async function issueGiftCard(req: Request, res: Response): Promise<Response | void> {
   try {
     const brandValidation = validateBrandId(req.params.id);
 
     if (!brandValidation.isValid) {
-      return res.status(400).json(errorResponse(brandValidation.error));
+      return res.status(400).json(errorResponse(brandValidation.error!));
     }
 
-    const brand = await findAndValidateBrand(brandValidation.brandId);
+    const brand = await findAndValidateBrand(brandValidation.brandId!);
 
     if (!brand) {
       return res.status(404).json(errorResponse("Brand not found"));
@@ -36,7 +37,7 @@ async function issueGiftCard(req, res) {
     if (!dataValidation.isValid) {
       return res
         .status(400)
-        .json(validationErrorResponse(dataValidation.errors));
+        .json(validationErrorResponse(dataValidation.errors!));
     }
 
     const {
@@ -57,7 +58,7 @@ async function issueGiftCard(req, res) {
     const activationCode = crypto.randomBytes(16).toString("hex").toUpperCase();
 
     // Build gift card data object
-    const giftCardData = {
+    const giftCardData: any = {
       brandId: brandValidation.brandId,
       brandName: brand.name,
       amount: parseFloat(amount),
@@ -107,12 +108,12 @@ async function issueGiftCard(req, res) {
 /**
  * List issued gift cards for a specific brand with pagination
  */
-async function getIssuedGiftCards(req, res) {
+export async function getIssuedGiftCards(req: Request, res: Response): Promise<Response | void> {
   try {
     const brandValidation = validateBrandId(req.params.id);
 
     if (!brandValidation.isValid) {
-      return res.status(400).json(errorResponse(brandValidation.error));
+      return res.status(400).json(errorResponse(brandValidation.error!));
     }
 
     const brand = await Brand.findByPk(brandValidation.brandId);
@@ -148,8 +149,3 @@ async function getIssuedGiftCards(req, res) {
     res.status(500).json(errorResponse("Failed to fetch issued cards"));
   }
 }
-
-module.exports = {
-  issueGiftCard,
-  getIssuedGiftCards,
-};

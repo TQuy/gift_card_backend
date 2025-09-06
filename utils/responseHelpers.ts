@@ -2,14 +2,46 @@
  * Response helper utilities for consistent API responses
  */
 
+interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+interface PaginationResponse {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+interface SuccessResponse<T = any> {
+  status: "success";
+  data: T;
+  message?: string;
+}
+
+interface PaginatedSuccessResponse<T = any> {
+  status: "success";
+  data: T[];
+  pagination: PaginationResponse;
+  [key: string]: any;
+}
+
+interface ErrorResponse {
+  status: "error";
+  error: string;
+  details?: string[];
+}
+
 /**
  * Create a success response with data
- * @param {*} data - The data to include in the response
- * @param {string} message - Optional success message
- * @returns {object} - Success response object
  */
-function successResponse(data, message = null) {
-  const response = {
+export function successResponse<T = any>(data: T, message?: string): SuccessResponse<T> {
+  const response: SuccessResponse<T> = {
     status: "success",
     data: data,
   };
@@ -23,12 +55,12 @@ function successResponse(data, message = null) {
 
 /**
  * Create a paginated success response
- * @param {Array} data - The data array
- * @param {object} paginationInfo - Pagination details {page, limit, total, totalPages}
- * @param {object} additionalData - Additional data to include in response
- * @returns {object} - Paginated success response object
  */
-function paginatedResponse(data, paginationInfo, additionalData = {}) {
+export function paginatedResponse<T = any>(
+  data: T[],
+  paginationInfo: PaginationInfo,
+  additionalData: Record<string, any> = {}
+): PaginatedSuccessResponse<T> {
   const { page, limit, total, totalPages } = paginationInfo;
 
   return {
@@ -48,22 +80,18 @@ function paginatedResponse(data, paginationInfo, additionalData = {}) {
 
 /**
  * Create an error response
- * @param {string} message - Error message
- * @param {number} statusCode - HTTP status code (optional, for reference)
- * @returns {object} - Error response object
  */
-function errorResponse(message, statusCode = null) {
+export function errorResponse(message: string, statusCode?: number): ErrorResponse {
   return {
+    status: "error",
     error: message,
   };
 }
 
 /**
  * Create a validation error response from multiple errors
- * @param {Array<string>} errors - Array of validation error messages
- * @returns {object} - Validation error response object
  */
-function validationErrorResponse(errors) {
+export function validationErrorResponse(errors: string[]): ErrorResponse {
   if (Array.isArray(errors) && errors.length === 1) {
     return errorResponse(errors[0]);
   }
@@ -75,6 +103,7 @@ function validationErrorResponse(errors) {
   }
 
   return {
+    status: "error",
     error: "Validation failed",
     details: errors,
   };
@@ -82,11 +111,9 @@ function validationErrorResponse(errors) {
 
 /**
  * Build gift card response data with only non-null fields
- * @param {object} giftCard - The gift card model instance
- * @returns {object} - Cleaned response data
  */
-function buildGiftCardResponse(giftCard) {
-  const responseData = {
+export function buildGiftCardResponse(giftCard: any): any {
+  const responseData: any = {
     id: giftCard.id,
     brandName: giftCard.brandName,
     amount: giftCard.amount,
@@ -118,11 +145,3 @@ function buildGiftCardResponse(giftCard) {
 
   return responseData;
 }
-
-module.exports = {
-  successResponse,
-  paginatedResponse,
-  errorResponse,
-  validationErrorResponse,
-  buildGiftCardResponse,
-};

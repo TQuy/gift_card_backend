@@ -1,8 +1,8 @@
-#!/usr/bin/env node
+#!/usr/bin/env ts-node
 
-const { initializeDatabase, Brand, GiftCard, sequelize } = require("../models");
+import { initializeDatabase, Brand, GiftCard, sequelize } from "@/models";
 
-async function truncateTables() {
+async function truncateTables(): Promise<void> {
   try {
     console.log("🧹 Starting table truncation...");
 
@@ -13,15 +13,15 @@ async function truncateTables() {
 
     if (showHelp) {
       console.log(`
-Usage: node scripts/truncate-tables.js [options]
+Usage: ts-node scripts/truncate-tables.ts [options]
 
 Options:
   --keep-brands     Keep brands table, only truncate gift cards
   --help, -h        Show this help message
 
 Examples:
-  node scripts/truncate-tables.js                    # Truncate both tables
-  node scripts/truncate-tables.js --keep-brands      # Keep brands, truncate gift cards only
+  ts-node scripts/truncate-tables.ts                    # Truncate both tables
+  ts-node scripts/truncate-tables.ts --keep-brands      # Keep brands, truncate gift cards only
 `);
       process.exit(0);
     }
@@ -63,4 +63,6 @@ Examples:
 }
 
 // Run the truncation
-truncateTables();
+if (require.main === module) {
+  truncateTables();
+}

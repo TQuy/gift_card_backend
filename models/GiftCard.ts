@@ -1,4 +1,6 @@
-module.exports = (sequelize, DataTypes) => {
+import { Sequelize, DataTypes } from "sequelize";
+
+export default (sequelize: Sequelize) => {
   const GiftCard = sequelize.define('GiftCard', {
     id: {
       type: DataTypes.UUID,
