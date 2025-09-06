@@ -5,7 +5,7 @@ import {
   brandExists,
 } from "../../services/brands";
 import { initializeTestDatabase } from "../../models";
-import { BRAND_STATUS } from "../../models/Brand";
+import { BRAND_STATUS } from "../../models/brand/Brand";
 
 // Set test environment
 process.env.NODE_ENV = "test";

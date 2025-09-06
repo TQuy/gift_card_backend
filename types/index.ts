@@ -2,8 +2,7 @@
  * TypeScript type definitions for the Gift Card API
  */
 
-import { BRAND_STATUS } from "@/models/Brand";
-import { USER_ROLES } from "@/config/constants";
+import { BRAND_STATUS } from "@/models/brand/Brand";
 
 // User interface (matching our Sequelize User model)
 export interface User {
@@ -11,12 +10,26 @@ export interface User {
   username: string;
   email: string;
   password: string;
-  role: number;
+  role: number; // Foreign key to Role table
   createdAt: Date;
   updatedAt: Date;
-  getRoleName(): string;
-  isAdmin(): boolean;
   comparePassword(password: string): Promise<boolean>;
+  isAdmin(): Promise<boolean>;
+}
+
+// Role interface (matching our Sequelize Role model)
+export interface Role {
+  id: number;
+  name: string;
+  description?: string;
+  status: number; // Using number status, not boolean
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// User with populated role relationship
+export interface UserWithRole extends User {
+  userRole?: Role;
 }
 
 // Extend Express Request interface to include user data
@@ -29,9 +42,6 @@ declare global {
     }
   }
 }
-
-// User role types
-export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
 
 // API Response types
 export interface ApiResponse<T = any> {
@@ -66,7 +76,6 @@ export interface RegisterRequest {
   username: string;
   email: string;
   password: string;
-  role?: UserRole;
 }
 
 export interface UserResponse {
@@ -74,8 +83,7 @@ export interface UserResponse {
   username: string;
   email: string;
   role: number;
-  roleName: string;
-  isAdmin: boolean;
+  roleName?: string;
   createdAt: Date;
 }
 

@@ -30,20 +30,5 @@ export const RESPONSE_STATUS = {
   ERROR: "error"
 } as const;
 
-// User role constants (should match your User model)
-export const USER_ROLES = {
-  ADMIN: 1,
-  USER: 2,
-  ADMIN_NAME: "admin",
-  USER_NAME: "user"
-} as const;
-
-// Default user credentials (for seeding)
-export const DEFAULT_ADMIN = {
-  USERNAME: "admin",
-  EMAIL: "admin@example.com",
-  PASSWORD: "admin123"
-} as const;
-
 // HTTP status codes - using http-status-codes library
 export const HTTP_STATUS = StatusCodes;

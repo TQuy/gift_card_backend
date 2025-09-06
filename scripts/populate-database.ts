@@ -1,7 +1,7 @@
 #!/usr/bin/env ts-node
 
-import { initializeDatabase, Brand, GiftCard, User, sequelize } from "@/models";
-import { seedDatabase, isDatabaseEmpty } from "@/utils/seedData";
+import { initializeDatabase, Brand, GiftCard, Role, User, sequelize } from "@/models";
+import { seedDatabase } from "@/utils/seedData";
 
 const populateDatabase = async (): Promise<void> => {
   try {
@@ -36,7 +36,7 @@ const populateDatabase = async (): Promise<void> => {
     }
 
     console.log(`📄 Seeding database with ${seedType}...`);
-    await seedDatabase({ Brand, GiftCard, User }, seedOptions);
+    await seedDatabase({ Brand, GiftCard, Role, User }, seedOptions);
 
     console.log("✅ Database population completed successfully!");
     process.exit(0);

@@ -3,13 +3,13 @@ import { Op } from "sequelize";
 import { Request, Response } from "express";
 import { User } from "@/models";
 import { successResponse, errorResponse } from "@/utils/responseHelpers";
-import { 
-  JWT_DEFAULTS, 
-  COOKIE_CONFIG, 
-  NODE_ENVIRONMENTS, 
-  HTTP_STATUS 
+import {
+  JWT_DEFAULTS,
+  COOKIE_CONFIG,
+  NODE_ENVIRONMENTS,
+  HTTP_STATUS
 } from "@/config/constants";
-import { JwtPayload, UserResponse } from "@/types";
+import { USER_ROLES } from "@/models/role/Role";
 
 // JWT secret - in production, use environment variable
 const JWT_SECRET: string = process.env.JWT_SECRET || JWT_DEFAULTS.SECRET;
@@ -24,7 +24,7 @@ function generateToken(user: any): string {
     email: user.email,
     role: user.role,
   };
-  
+
   return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN } as SignOptions);
 }
 
@@ -72,7 +72,7 @@ export async function register(req: Request, res: Response): Promise<Response> {
       username,
       email,
       password,
-      role: role || User.USER_ROLES.USER,
+      role: role || USER_ROLES.USER,
     })
 
     // Generate token

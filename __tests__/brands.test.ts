@@ -6,7 +6,7 @@ import {
   getBrandById as getBrandByIdService,
   brandExists
 } from "../services/brands";
-import { BRAND_STATUS } from "../models/Brand";
+import { BRAND_STATUS } from "../models/brand/Brand";
 
 // Set test environment
 process.env.NODE_ENV = "test";

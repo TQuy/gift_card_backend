@@ -1,8 +1,8 @@
 import bcrypt from "bcryptjs";
 import { Sequelize, DataTypes } from "sequelize";
-import { USER_ROLES } from "@/config/constants";
+import { USER_ROLES } from "../role/Role";
 
-export default (sequelize: Sequelize): any => {
+export default (sequelize: Sequelize) => {
   const User = sequelize.define(
     "User",
     {
@@ -31,20 +31,18 @@ export default (sequelize: Sequelize): any => {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      role: {
+      role_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: USER_ROLES.USER,
-        validate: {
-          isIn: [Object.values(USER_ROLES)],
+        references: {
+          model: 'roles',
+          key: 'id',
         },
       },
     },
     {
       tableName: "users",
       timestamps: true,
-      createdAt: "createdAt",
-      updatedAt: "updatedAt",
       hooks: {
         beforeCreate: async (user: any) => {
           if (user.password) {
@@ -65,21 +63,11 @@ export default (sequelize: Sequelize): any => {
     return await bcrypt.compare(candidatePassword, this.password);
   };
 
-  // Instance method to get role name
-  (User.prototype as any).getRoleName = function (): string {
-    const roleNames = Object.keys(USER_ROLES) as Array<keyof typeof USER_ROLES>;
-    return (
-      roleNames.find((name) => USER_ROLES[name] === this.role) || "UNKNOWN"
-    );
-  };
-
   // Static method to check if user is admin
-  (User.prototype as any).isAdmin = function (): boolean {
-    return this.role === USER_ROLES.ADMIN;
+  (User.prototype as any).isAdmin = async function (): Promise<boolean> {
+    const userRole = await this.getUserRole();
+    return userRole.name === USER_ROLES.ADMIN;
   };
-
-  // Add constants to model
-  (User as any).USER_ROLES = USER_ROLES;
 
   return User;
 };
