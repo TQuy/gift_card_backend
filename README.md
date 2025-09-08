@@ -41,12 +41,22 @@ A RESTful API built with Express.js for managing gift card brands, issuing gift 
 npm install
 ```
 
-2. Start the development server:
+2. Copy environment configuration:
+```bash
+cp .env.example .env
+```
+
+3. Configure environment variables in `.env`:
+   - Set `JWT_SECRET` to a secure random string
+   - Set `COOKIE_SECRET` to a secure random string
+   - Add your frontend URLs to `FRONTEND_URLS` for production
+
+4. Start the development server:
 ```bash
 npm run dev
 ```
 
-3. Start the production server:
+5. Start the production server:
 ```bash
 npm start
 ```
@@ -80,6 +90,32 @@ To login, send a POST request to `/api/auth/login`:
 ```
 
 Authentication uses JWT tokens stored in HTTP-only cookies for security.
+
+## CORS Configuration
+
+The API is configured to support cookie-based authentication with proper CORS settings:
+
+- **Credentials Enabled**: `Access-Control-Allow-Credentials: true`
+- **Explicit Origins**: No wildcard (*) usage for security
+- **Development Origins**: Supports common development servers (localhost:3000, localhost:5173, etc.)
+- **Production Origins**: Configure via `FRONTEND_URLS` environment variable
+
+### Frontend Integration
+
+When making requests from your frontend application, ensure you:
+
+1. **Include credentials in requests:**
+   ```javascript
+   // Using fetch
+   fetch('http://localhost:8000/api/brands', {
+     credentials: 'include'
+   })
+   
+   // Using axios
+   axios.defaults.withCredentials = true;
+   ```
+
+2. **Set your frontend URL in allowed origins** (for production)
 
 ## Issue Gift Card
 

@@ -7,6 +7,7 @@ import { initializeDatabase } from "@/models";
 import { specs, swaggerUi } from "./swagger";
 import router from "@/routes";
 import { config } from "dotenv";
+import { corsOptions } from "./config/constants";
 
 config();
 
@@ -15,7 +16,7 @@ const PORT = process.env.PORT || 8000;
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(morgan("combined"));
 app.use(cookieParser());
 app.use(express.json());
@@ -58,7 +59,7 @@ const startServer = async (): Promise<void> => {
   try {
     await initializeDatabase();
     console.log('Database initialized successfully');
-    
+
     if (require.main === module) {
       // Only start server if this file is run directly, not when imported for tests
       server = app.listen(PORT, () => {

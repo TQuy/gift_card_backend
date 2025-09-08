@@ -119,10 +119,6 @@ export async function registerUser({
     throw new Error('Username, email, and password are required');
   }
 
-  if (password.length < 6) {
-    throw new Error('Password must be at least 6 characters long');
-  }
-
   // Check if user exists
   const userExists = await checkUserExists(username, email);
   if (userExists) {
