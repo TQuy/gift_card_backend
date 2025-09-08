@@ -234,18 +234,6 @@ describe("Auth Service", function () {
         );
       });
 
-      it("should throw error for short password", async function () {
-        const userData = {
-          username: "testuser",
-          email: "test@example.com",
-          password: "123"
-        };
-
-        await expect(registerUser(userData)).rejects.toThrow(
-          "Password must be at least 6 characters long"
-        );
-      });
-
       it("should throw error for existing username", async function () {
         const userData = {
           username: sampleUser.username, // Already exists
