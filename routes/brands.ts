@@ -3,7 +3,7 @@ import {
   getAllBrands,
   getBrandById,
 } from "@/controllers/brandsController";
-import { optionalAuth } from "@/middleware/auth";
+import { authenticateToken, optionalAuth } from "@/middleware/auth";
 
 const router = express.Router();
 
@@ -13,6 +13,8 @@ const router = express.Router();
  *   get:
  *     summary: Get all active brands with pagination
  *     tags: [Brands]
+ *     security:
+ *       - cookieAuth: []
  *     parameters:
  *       - in: query
  *         name: page
@@ -50,7 +52,7 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get("/", optionalAuth, getAllBrands);
+router.get("/", authenticateToken, getAllBrands);
 
 /**
  * @swagger
@@ -58,6 +60,8 @@ router.get("/", optionalAuth, getAllBrands);
  *   get:
  *     summary: Get a specific brand by ID with gift card count
  *     tags: [Brands]
+ *     security:
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -132,6 +136,6 @@ router.get("/", optionalAuth, getAllBrands);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get("/:id", optionalAuth, getBrandById);
+router.get("/:id", authenticateToken, getBrandById);
 
 export default router;

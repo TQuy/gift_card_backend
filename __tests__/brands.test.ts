@@ -7,14 +7,30 @@ import {
   brandExists
 } from "../services/brands";
 import { BRAND_STATUS } from "../models/brand/Brand";
+import { sampleUser } from "../utils/seedData/sample";
 
 // Set test environment
 process.env.NODE_ENV = "test";
 
 describe("Gift Card API", () => {
+  let authCookies: string;
+
   // Set up test database
   beforeAll(async () => {
     await initializeTestDatabase();
+
+    // Login to get auth cookies for protected endpoints
+    const loginData = {
+      email: sampleUser.email,
+      password: sampleUser.password
+    };
+
+    const loginRes = await request(app)
+      .post("/api/auth/login")
+      .send(loginData)
+      .expect(200);
+
+    authCookies = loginRes.headers["set-cookie"];
   });
 
   // Clean up after each test
@@ -32,7 +48,10 @@ describe("Gift Card API", () => {
 
   describe("GET /api/brands", () => {
     it("should return all brands with pagination", async () => {
-      const res = await request(app).get("/api/brands").expect(200);
+      const res = await request(app)
+        .get("/api/brands")
+        .set("Cookie", authCookies)
+        .expect(200);
 
       // Get expected data from service
       const expectedData = await getAllActiveBrands({
@@ -75,6 +94,7 @@ describe("Gift Card API", () => {
 
       const res = await request(app)
         .get("/api/brands?page=1&limit=2")
+        .set("Cookie", authCookies)
         .expect(200);
 
       expect(res.body.status).toBe("success");
@@ -95,6 +115,7 @@ describe("Gift Card API", () => {
 
       const res = await request(app)
         .get("/api/brands?page=2&limit=2")
+        .set("Cookie", authCookies)
         .expect(200);
 
       expect(res.body.status).toBe("success");
@@ -103,6 +124,14 @@ describe("Gift Card API", () => {
       // Validate data matches service response
       expect(res.body.data.length).toBe(expectedData.brands.length);
     });
+
+    it("should require authentication", async () => {
+      const res = await request(app)
+        .get("/api/brands")
+        .expect(401);
+
+      expect(res.body.error).toBe("Access token required");
+    });
   });
 
   describe("GET /api/brands/:id", () => {
@@ -110,7 +139,10 @@ describe("Gift Card API", () => {
       // Get expected data from service
       const expectedBrand = await getBrandByIdService(1);
 
-      const res = await request(app).get("/api/brands/1").expect(200);
+      const res = await request(app)
+        .get("/api/brands/1")
+        .set("Cookie", authCookies)
+        .expect(200);
 
       expect(res.body.status).toBe("success");
       expect(res.body.data).toHaveProperty("id", 1);
@@ -130,14 +162,28 @@ describe("Gift Card API", () => {
       const exists = await brandExists(999);
       expect(exists).toBe(false);
 
-      const res = await request(app).get("/api/brands/999").expect(404);
+      const res = await request(app)
+        .get("/api/brands/999")
+        .set("Cookie", authCookies)
+        .expect(404);
       expect(res.body.error).toBe("Brand not found");
     });
 
     it("should return 400 for invalid brand ID", async () => {
-      const res = await request(app).get("/api/brands/invalid").expect(400);
+      const res = await request(app)
+        .get("/api/brands/invalid")
+        .set("Cookie", authCookies)
+        .expect(400);
 
       expect(res.body.error).toBe("Invalid brand ID format");
+    });
+
+    it("should require authentication", async () => {
+      const res = await request(app)
+        .get("/api/brands/1")
+        .expect(401);
+
+      expect(res.body.error).toBe("Access token required");
     });
   });
 
@@ -159,6 +205,7 @@ describe("Gift Card API", () => {
 
       const res = await request(app)
         .post("/api/brands/1/issues")
+        .set("Cookie", authCookies)
         .send(giftCardData)
         .expect(201);
 
@@ -180,33 +227,65 @@ describe("Gift Card API", () => {
 
       const res = await request(app)
         .post("/api/brands/1/issues")
+        .set("Cookie", authCookies)
         .send(invalidData)
         .expect(400);
 
       expect(res.body.error).toBe("Valid amount is required");
+    });
+
+    it("should require authentication", async () => {
+      const giftCardData = {
+        amount: 100,
+        recipientEmail: "recipient@example.com",
+        recipientPhone: "+6512345678",
+        deliveryType: "personal",
+        deliveryTime: "immediately",
+      };
+
+      const res = await request(app)
+        .post("/api/brands/1/issues")
+        .send(giftCardData)
+        .expect(401);
+
+      expect(res.body.error).toBe("Access token required");
     });
   });
 
   describe("GET /api/brands/:id/issues", () => {
     beforeEach(async () => {
       // Issue a test gift card
-      await request(app).post("/api/brands/1/issues").send({
-        amount: 50,
-        recipientEmail: "test@example.com",
-        recipientPhone: "+6512345678",
-        message: "Test card",
-        deliveryType: "personal",
-        deliveryTime: "immediately",
-      });
+      await request(app)
+        .post("/api/brands/1/issues")
+        .set("Cookie", authCookies)
+        .send({
+          amount: 50,
+          recipientEmail: "test@example.com",
+          recipientPhone: "+6512345678",
+          message: "Test card",
+          deliveryType: "personal",
+          deliveryTime: "immediately",
+        });
     });
 
     it("should return issued cards for a brand with pagination", async () => {
-      const res = await request(app).get("/api/brands/1/issues").expect(200);
+      const res = await request(app)
+        .get("/api/brands/1/issues")
+        .set("Cookie", authCookies)
+        .expect(200);
 
       expect(res.body.status).toBe("success");
       expect(res.body.data).toBeInstanceOf(Array);
       expect(res.body.data.length).toBeGreaterThan(0);
       expect(res.body.pagination).toBeDefined();
+    });
+
+    it("should require authentication", async () => {
+      const res = await request(app)
+        .get("/api/brands/1/issues")
+        .expect(401);
+
+      expect(res.body.error).toBe("Access token required");
     });
   });
 

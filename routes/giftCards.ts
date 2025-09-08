@@ -3,7 +3,7 @@ import {
   issueGiftCard,
   getIssuedGiftCards,
 } from "@/controllers/giftCardsController";
-import { optionalAuth } from "@/middleware/auth";
+import { authenticateToken } from "@/middleware/auth";
 
 const router = express.Router();
 
@@ -14,7 +14,7 @@ const router = express.Router();
  *     summary: Issue a gift card for a specific brand
  *     tags: [Gift Cards]
  *     security:
- *       - BearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -127,7 +127,7 @@ const router = express.Router();
  */
 router.post(
   "/:id/issues",
-  optionalAuth,
+  authenticateToken,
   issueGiftCard
 );
 
@@ -138,7 +138,7 @@ router.post(
  *     summary: List issued gift cards for a specific brand
  *     tags: [Gift Cards]
  *     security:
- *       - BearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -207,6 +207,6 @@ router.post(
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get("/:id/issues", optionalAuth, getIssuedGiftCards);
+router.get("/:id/issues", authenticateToken, getIssuedGiftCards);
 
 export default router;
