@@ -17,9 +17,7 @@
     "db:populate": "ts-node scripts/populate-database.ts",
     "db:populate:clear": "ts-node scripts/populate-database.ts --clear",
     "db:seed:brands": "ts-node scripts/populate-database.ts --brands-only",
-    "db:seed:users": "ts-node scripts/populate-database.ts --users-only",
-    "db:truncate": "ts-node scripts/truncate-tables.ts",
-    "db:truncate:keep-brands": "ts-node scripts/truncate-tables.ts --keep-brands"
+    "db:seed:users": "ts-node scripts/populate-database.ts --users-only"
   },
   "keywords": [
     "gift-card",
